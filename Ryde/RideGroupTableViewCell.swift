@@ -10,8 +10,8 @@ import UIKit
 
 class RideGroupTableViewCell: UITableViewCell {
     
-    @IBOutlet var rowName: UILabel!
+    @IBOutlet var rowName: UILabel! // the name of the group
 
-    @IBOutlet var numDriverLabel: UILabel!
-    @IBOutlet var numQueueLabel: UILabel!
+    @IBOutlet var numDriverLabel: UILabel!  // The number of drivers
+    @IBOutlet var numQueueLabel: UILabel!   // the number of people in queue
 }

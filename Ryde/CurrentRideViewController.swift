@@ -50,17 +50,19 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
     // Timer to schedule tasks
     var updateTask: NSTimer?
     
+    // Status of the rider's ride
     var queueStatus:String = "active"
-    
-    let semaphore = dispatch_semaphore_create(0);
     
     // Mapkit showing the anotations
     @IBOutlet var mapView: MKMapView!
     
+    // label of the name of driver assigned
     @IBOutlet var driverNameLabel: UILabel!
     
+    // label of the car information of driver
     @IBOutlet var driverCarLabel: UILabel!
     
+    // Location manager for handling coordinations
     let locationManager = CLLocationManager()
     
     override func viewDidLoad() {
@@ -71,6 +73,7 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
             self.FBid = (result.valueForKey("id") as? String)!
         })
         
+        // Sets the title of the current Ride
         self.title = "Current Ride"
         
         // Add the side menu bar
@@ -79,6 +82,7 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         // Set map view delegate with controller
         self.mapView.delegate = self
         
+        // Call method to update driver information and check if ride has completed
         updateRide()
         
         super.viewDidLoad()
@@ -106,14 +110,15 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         // Show two anotation and a route instead if a destination was inputted
         if (destLong != 0 && destLat != 0)
         {
+            // Create annotation for destination
             let destLocation = CLLocationCoordinate2DMake(destLat, destLong)
             let destAnnotation = CustomPointAnnotation()
             destAnnotation.coordinate = destLocation
             destAnnotation.title = "Your drop off location."
             destAnnotation.imageName = "Destination"
             mapView.addAnnotation(destAnnotation)
-
             
+            // Create a direction from start to destination annotations
             let directionsRequest = MKDirectionsRequest()
             let markStart = MKPlacemark(coordinate: CLLocationCoordinate2DMake(annotation.coordinate.latitude, annotation.coordinate.longitude), addressDictionary: nil)
             let markDest = MKPlacemark(coordinate: CLLocationCoordinate2DMake(destAnnotation.coordinate.latitude, destAnnotation.coordinate.longitude), addressDictionary: nil)
@@ -122,6 +127,7 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
             directionsRequest.destination = MKMapItem(placemark: markDest)
             directionsRequest.transportType = MKDirectionsTransportType.Automobile
             let directions = MKDirections(request: directionsRequest)
+            // Calculates the direction from start to destination
             directions.calculateDirectionsWithCompletionHandler
                 {
                     (response, error) -> Void in
@@ -137,13 +143,13 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
                         self.mapView.addOverlay((route.polyline), level: MKOverlayLevel.AboveRoads)
                         
                         var rect = route.polyline.boundingMapRect
-                        
+                        // reset the mapview to show the route
                         self.mapView.setRegion(MKCoordinateRegionForMapRect(rect), animated: true)
                     }
             }
         }
         
-        // schedules task for every n second
+        // schedules task for every 3 second to updateRide
         updateTask = NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector: "updateRide", userInfo: nil, repeats: true)
     }
     
@@ -152,6 +158,9 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         // Dispose of any resources that can be recreated.
     }
     
+    /**
+     * Method for creating a custom annotation with an image
+     */
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         if !(annotation is CustomPointAnnotation) {
             return nil
@@ -168,22 +177,26 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
             anView!.annotation = annotation
         }
         
-        //Set annotation-specific properties **AFTER**
-        //the view is dequeued or created...
-        
+        // Create a new annotation with image path that is passed in
         let cpa = annotation as! CustomPointAnnotation
         anView!.image = UIImage(named:cpa.imageName)
         
         return anView
     }
     
+    /**
+     * Method for updating ride information and checking if ride has completed
+     */
     func updateRide(){
+        // Post a request to update ride information
         let postUrl = ("http://\(self.appDelegate.baseURL)/Ryde/api/ride/driverInfo/" + self.FBid)
-        //let postUrl = ("http://\(self.appDelegate.baseURL)/Ryde/api/ride/driverInfo/MikeFBTok")
         self.getRideInfo(postUrl)
+        
+        // Update view labels if information has changed for driver
         driverNameLabel.text = "Driver Name: " + driverName
         driverCarLabel.text = "Driver's Car: " + carinfo
         
+        // Pop back to home view of the rider if the ride is over
         if queueStatus != "active"
         {
             self.tabBarController?.tabBar.hidden = false
@@ -192,10 +205,10 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         }
     }
     
-    // Get Function for Checking if user has already request a ride
+    // Get Function for Checking updates on ride
     func getRideInfo(url : String) {
         
-        //let params: [String : AnyObject] = [:]
+        //Create a http request, type GET
         let request = NSMutableURLRequest(URL: NSURL(string: url)!)
         let session = NSURLSession.sharedSession()
         request.HTTPMethod = "GET"
@@ -204,11 +217,12 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         {
             (data, response, error) in
             guard let _ = data else {
-                print("error calling")
+                print("error calling")  // Request failed
                 return
             }
             let json: NSDictionary?
             
+            // Attempt to read the http request body as JSON
             do {
                 json = try NSJSONSerialization.JSONObjectWithData(data!, options: .MutableLeaves) as? NSDictionary
             } catch let dataError{
@@ -219,23 +233,25 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
                 print("Error could not parse JSON: '\(jsonStr)'")
                 return
             }
+            
+            // read the new JSON
             if let parseJSON = json {
-                print(parseJSON)
+                // Grab the status of the ride
                 if let status = parseJSON["queueStatus"] as? String
                 {
+                    // Check if the rider's ride is over
                     if status == "notInQueue"
                     {
                         self.appDelegate.rydesTakenCount += 1
                         self.queueStatus = status
-                        print("notInQueue")
                     }
-                    else if status == "nonActive"
+                    else if status == "nonActive"   // Check if the rider's ride was cancelled by driver
                     {
                         self.queueStatus = status
                         //segue back to queue?
                         print("nonActive")
                     }
-                    else if status == "active"
+                    else if status == "active"  // Check if the ride is still active, update driver information
                     {
                         self.queueStatus = status
                         if  let rideJSON = parseJSON["ride"] as? NSDictionary
@@ -277,17 +293,20 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
     
     /*
      Creates an alert box when contact driver is clicked
-     prints the driver number in the alert box
+     prints the driver number in the alert box and allow for rider to call driver
     */
     func contactDriverAlert()
     {
         let alert = UIAlertController(title: driverName + "'s Phone Number", message: driverNumber, preferredStyle: UIAlertControllerStyle.Alert)
         
+        // Handles action if the rider wants to call driver, switch to phone application and calls the number
         alert.addAction(UIAlertAction(title: "Call", style: .Default, handler: { (action: UIAlertAction!) in
             if let url = NSURL(string: "tel://\(self.driverNumber)") {
                 UIApplication.sharedApplication().openURL(url)
             }
         }))
+        
+        // Closes alert box
         alert.addAction(UIAlertAction(title: "Cancel", style: .Default, handler: { (action: UIAlertAction!) in
             
         }))
@@ -303,15 +322,21 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
     {
         let alert = UIAlertController(title: "Are you sure you want to cancel ride?", message: "", preferredStyle: UIAlertControllerStyle.Alert)
         
+        // Attempt to cancel ride if the user presses Yes
         alert.addAction(UIAlertAction(title: "Yes", style: .Default, handler: { (action: UIAlertAction!) in
+            // Bring back tabBar before segueing to home screen
             self.tabBarController?.tabBar.hidden = false
             
+            // Post a request to server to delete the ride from the queue and database
             let postUrl = ("http://\(self.appDelegate.baseURL)/Ryde/api/ride/cancel/" + self.FBid)
             self.postCancel(postUrl)
+            // Stops the scheduled method
             self.updateTask?.invalidate()
+            // change back to home screen of rider
             self.navigationController?.popToRootViewControllerAnimated(true)
         }))
         
+        // Closes the alert box
         alert.addAction(UIAlertAction(title: "No", style: .Default, handler: { (action: UIAlertAction!) in
             //do nothing
         }))
@@ -319,11 +344,10 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         presentViewController(alert, animated: true, completion: nil)
     }
     
-    // SOURCE: http://jamesonquave.com/blog/making-a-post-request-in-swift/
-    // Post Function for Canceling
+    // Post Function for Canceling, deletes the ride from the server and database
     func postCancel(url : String) {
         
-        //let params: [String : AnyObject] = [:]
+        // Create a new http request, type DELETE
         let request = NSMutableURLRequest(URL: NSURL(string: url)!)
         let session = NSURLSession.sharedSession()
         request.HTTPMethod = "DELETE"
@@ -332,38 +356,37 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         {
             (data, response, error) in
             guard let _ = data else {
-                print("error calling")
+                print("error calling")  // request failed
                 return
             }
-            print("canceling")
         }
         
         task.resume()
     }
     
     //Handles Slide Menu interaction
-    
     func slideMenuItemSelectedAtIndex(index: Int32) {
         let topViewController : UIViewController = self.navigationController!.topViewController!
         print("View Controller is : \(topViewController) \n", terminator: "")
         switch(index){
         case 0:
-            print("Contact Driver\n", terminator: "")
+            print("Contact Driver\n", terminator: "")  // contact driver is pressed
             
-            contactDriverAlert()
+            contactDriverAlert() // calls contact driver method to bring up alert
             
             break
         case 1:
-            print("Cancel Ride\n", terminator: "")
+            print("Cancel Ride\n", terminator: "")  // cancel ride is pressed
             
-            cancelRideAlert()
+            cancelRideAlert()   // Calls cancel ride to bring up alert
             
             break
         default:
-            print("default\n", terminator: "")
+            print("default\n", terminator: "")  // Closes menu
         }
     }
     
+    // Method to bring up slidemenu
     func openViewControllerBasedOnIdentifier(strIdentifier:String){
         let destViewController : UIViewController = self.storyboard!.instantiateViewControllerWithIdentifier(strIdentifier)
         
@@ -376,6 +399,7 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         }
     }
     
+    // Create and add button on navigation bar to open up slidemenu
     func addSlideMenuButton(){
         let btnShowMenu = UIButton(type: UIButtonType.System)
         btnShowMenu.setImage(self.defaultMenuImage(), forState: UIControlState.Normal)
@@ -385,6 +409,7 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         self.navigationItem.leftBarButtonItem = customBarItem;
     }
     
+    // Set the menu image to icons
     func defaultMenuImage() -> UIImage {
         var defaultMenuImage = UIImage()
         
@@ -407,6 +432,7 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         return defaultMenuImage;
     }
     
+    // Handles if pressed while on the slide menu
     func onSlideMenuButtonPressed(sender : UIButton){
         if (sender.tag == 10)
         {
@@ -448,19 +474,13 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
             sender.enabled = true
             }, completion:nil)
     }
-    /*
-     // MARK: - Navigation
-     
-     // In a storyboard-based application, you will often want to do a little preparation before navigation
-     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-     // Get the new view controller using segue.destinationViewController.
-     // Pass the selected object to the new view controller.
-     }
-     */
     
+    // Rerender the map with route and change the route line color and size
     func mapView(mapView: MKMapView, rendererForOverlay overlay: MKOverlay) -> MKOverlayRenderer {
         let renderer = MKPolylineRenderer(overlay: overlay)
+        // set the line to blue
         renderer.strokeColor = UIColor.blueColor()
+        // sets the route line width
         renderer.lineWidth = 3.0
         
         return renderer

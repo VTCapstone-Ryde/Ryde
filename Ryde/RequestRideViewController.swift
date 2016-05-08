@@ -49,6 +49,7 @@ class RequestRideViewController: UIViewController {
     
     let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
     
+    // Label that shows the queue position of the rider
     @IBOutlet var queueLabel: UILabel!
     
     override func viewDidLoad() {
@@ -61,58 +62,36 @@ class RequestRideViewController: UIViewController {
             self.FBid = (result.valueForKey("id") as? String)!
         })
         
+        // Set the title of the view
         self.title = "Ryde Requested"
+        // Set the back navigation button to a blank action
         navigationItem.leftBarButtonItem = backButton
         
         super.viewDidLoad()
         
+        // Gets queue position for the driver
         let postUrl = ("http://\(self.appDelegate.baseURL)/Ryde/api/ride/getposition/" + self.FBid + "/" + (String)(self.selectedTID))
         self.getQueuePos(postUrl)
-        // schedules task for every n second
+        // Scheduler that calls updateQueue every 3 seconds
         updateTimer = NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector: "updateQueue", userInfo: nil, repeats: true)
-        
-        
-        /*
-        self.queueLabel.text = (String)(self.queueNum)
-        
-        
-        let seconds = 2.0
-        let delay = seconds * Double(NSEC_PER_SEC)  // nanoseconds per seconds
-        let dispatchTime = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
-        
-        dispatch_after(dispatchTime, dispatch_get_main_queue(), {
-            
-            //self.queueLabel.text = "1"
-            
-        })
-        
-        let seconds2 = 4.0
-        let delay2 = seconds2 * Double(NSEC_PER_SEC)  // nanoseconds per seconds
-        let dispatchTime2 = dispatch_time(DISPATCH_TIME_NOW, Int64(delay2))
-        
-        dispatch_after(dispatchTime2, dispatch_get_main_queue(), {
-            
-            self.updateTimer!.invalidate()     //stops updateTimer (put in the post request when queue = 0 later)
-            
-            //self.queueLabel.text = "0"
-            self.performSegueWithIdentifier("ShowCurrentRide", sender: nil)
-            
-        })
- */
- 
     }
     
+    /**
+     *  Function for updating the queue position and checking if a driver has been assigned
+     */
     func updateQueue(){
+        // Create a new request to check the queueposition and ride status
         let postUrl = ("http://\(self.appDelegate.baseURL)/Ryde/api/ride/getposition/" + self.FBid + "/" + (String)(self.selectedTID))
         self.getQueuePos(postUrl)
-        print(queueNum)
         self.queueLabel.text = (String)(queueNum)
+        // check if a driver has been assigned, active means the rider has a driver
         if rideStatus == "active"
         {
+            // Stops the scheduler
             updateTimer?.invalidate()
+            // Segue to new screen
             self.performSegueWithIdentifier("ShowCurrentRide", sender: nil)
         }
-        //check if queueNum is 0, segue when it is.
     }
     
     override func didReceiveMemoryWarning() {
@@ -120,28 +99,37 @@ class RequestRideViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
+    /**
+     * Method to handle driver pressing cancel ride
+     */
     @IBAction func cancelRideClicked(sender: UIButton) {
-        //post a cancellation
+        //Calls on cancelRideAlert to create an alert for the user to confirm cancellation
         cancelRideAlert()
     }
     
     /*
-     Creates an alert box cancel ride is clicked
+     * Creates an alert box cancel ride is clicked
      */
     func cancelRideAlert()
     {
         let alert = UIAlertController(title: "Are you sure you want to cancel ride?", message: "", preferredStyle: UIAlertControllerStyle.Alert)
         
+        // Handles when user confirms cancellation of ride request
         alert.addAction(UIAlertAction(title: "Yes", style: .Default, handler: { (action: UIAlertAction!) in
+            // Bring back tabBarController before segueing to home screen
             self.tabBarController?.tabBar.hidden = false
             
+            // Post a request to the server to remove the user from the queue
             let postUrl = ("http://\(self.appDelegate.baseURL)/Ryde/api/ride/cancel/" + self.FBid)
             self.postCancel(postUrl)
             
+            // Stops the task Scheduler
             self.updateTimer?.invalidate()
+            // Pop back to rider's homepage
             self.navigationController?.popToRootViewControllerAnimated(true)
         }))
         
+        // Closes the alert box
         alert.addAction(UIAlertAction(title: "No", style: .Default, handler: { (action: UIAlertAction!) in
             //do nothing
         }))
@@ -150,14 +138,15 @@ class RequestRideViewController: UIViewController {
     }
     
     // SOURCE: http://jamesonquave.com/blog/making-a-post-request-in-swift/
-    // Post Function for Canceling
+    // Post Function for Canceling a rider's request
     func postCancel(url : String) {
         
-        //let params: [String : AnyObject] = [:]
+        // Create a new http request, type DELETE
         let request = NSMutableURLRequest(URL: NSURL(string: url)!)
         let session = NSURLSession.sharedSession()
         request.HTTPMethod = "DELETE"
         
+        // attempt to send request
         let task = session.dataTaskWithRequest(request)
         {
             (data, response, error) in
@@ -165,13 +154,12 @@ class RequestRideViewController: UIViewController {
                 print("error calling")
                 return
             }
-            print("canceling")
         }
         
         task.resume()
     }
     
-    // Get Function for Canceling
+    // Get Function for updating ride information
     func getQueuePos(url : String) {
         
         //let params: [String : AnyObject] = [:]
@@ -188,6 +176,7 @@ class RequestRideViewController: UIViewController {
             }
             let json: NSDictionary?
             
+            // Attempt to read the body of the response as JSON
             do {
                 json = try NSJSONSerialization.JSONObjectWithData(data!, options: .MutableLeaves) as? NSDictionary
             } catch let dataError{
@@ -199,7 +188,7 @@ class RequestRideViewController: UIViewController {
                 return
             }
             if let parseJSON = json {
-                print(parseJSON)
+                // Grab all ride information before segueing to CurrentRide view
                 if let tempNum = parseJSON["position"] as? Int
                 {
                     self.queueNum = tempNum

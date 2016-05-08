@@ -66,8 +66,10 @@ class RiderViewController: UIViewController, MKMapViewDelegate, CLLocationManage
     // Store the timeslot id once retrieved
     var timeslotID = ""
     
+    // The Facebook ID of the current User
     var fbToken = ""
     
+    // The driverStatus of the current user
     var driverStatus: Bool!
     
     // Driver name
@@ -250,7 +252,6 @@ class RiderViewController: UIViewController, MKMapViewDelegate, CLLocationManage
     
     
     // Mark - Re-set to current location
-    
     @IBAction func resetToCurrentLocation(sender: UIButton) {
 
         let userLocation = self.lastLocation
@@ -260,14 +261,12 @@ class RiderViewController: UIViewController, MKMapViewDelegate, CLLocationManage
     }
     
     
-    // Mark - Request Ryde
-    
+    // Mark - Request Ryde button is pressed
     @IBAction func RequestRydeClicked(sender: UIButton) {
         performSegueWithIdentifier("ShowRiderRequestGroup", sender: self)
     }
     
     // Mark - Get Rid of Keyboard when Done Editing
-    
     /**
      * Called when 'return' key pressed. return NO to ignore.
      */
@@ -378,23 +377,31 @@ class RiderViewController: UIViewController, MKMapViewDelegate, CLLocationManage
         
     }
     
-    // Get Function for Checking if user has already request a ride
+    
+    /**
+     * Get request for checking if user has already requested a ride
+     *
+     * Set appropriate fields if a ride request or ride exists and segues to 
+     * different screens
+     */
     func getRiderQueueStatus(url : String) {
         
-        //let params: [String : AnyObject] = [:]
+        // Create a new HTTP request, type GET
         let request = NSMutableURLRequest(URL: NSURL(string: url)!)
         let session = NSURLSession.sharedSession()
         request.HTTPMethod = "GET"
         
+        // Send the HTTP request and handle the returned JSON
         let task = session.dataTaskWithRequest(request)
         {
             (data, response, error) in
             guard let _ = data else {
-                print("error calling")
+                print("error calling")  // If the get request fails, return
                 return
             }
             let json: NSDictionary?
             
+            // Attempt to parse the response body and put it into local variable json
             do {
                 json = try NSJSONSerialization.JSONObjectWithData(data!, options: .MutableLeaves) as? NSDictionary
             } catch let dataError{
@@ -405,10 +412,13 @@ class RiderViewController: UIViewController, MKMapViewDelegate, CLLocationManage
                 print("Error could not parse JSON: '\(jsonStr)'")
                 return
             }
+            // json correctly retrieved, now parse for needed information
             if let parseJSON = json {
-                print(parseJSON)
+                // Check the ride status of the rider to see if the rider is in the queue or has a ride
                 if let status = parseJSON["queueStatus"] as? String
                 {
+                    // Rider has requested a ride and is in the queue, set location information and segue to
+                    // RequestRideViewController
                     if status == "nonActive"
                     {
                         if  let rideJSON = parseJSON["ride"] as? NSDictionary
@@ -432,6 +442,8 @@ class RiderViewController: UIViewController, MKMapViewDelegate, CLLocationManage
                         }
                         self.performSegueWithIdentifier("homeShowRequestView", sender: self)
                     }
+                    // Rider has a current Ride, Retrieve driver's information and ride location information
+                    // Segue to CurrentRideViewController
                     else if status == "active"
                     {
                         if  let rideJSON = parseJSON["ride"] as? NSDictionary
@@ -582,6 +594,7 @@ class RiderViewController: UIViewController, MKMapViewDelegate, CLLocationManage
             // Obtain the object reference of the destination view controller
             let currentRideViewController: CurrentRideViewController = segue.destinationViewController as! CurrentRideViewController
             
+            // Pass all needed information downwind to currentRideViewController
             currentRideViewController.startLatitude = self.previousLat
             currentRideViewController.startLongitude = self.previousLong
             currentRideViewController.destLat = self.destLat
@@ -590,8 +603,10 @@ class RiderViewController: UIViewController, MKMapViewDelegate, CLLocationManage
             currentRideViewController.carinfo = self.carinfo
             currentRideViewController.driverNumber = self.driverNumber
         } else if segue.identifier == "homeShowRequestView" {
+            // Obtain the object reference of the destination view controller
             let requestRideViewController: RequestRideViewController = segue.destinationViewController as! RequestRideViewController
             
+            // Pass all needed information downwind to requestRideViewController
             requestRideViewController.destLat = self.destLat
             requestRideViewController.destLong = self.destLong
             requestRideViewController.startLongitude = self.previousLong
