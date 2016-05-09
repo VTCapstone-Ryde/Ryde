@@ -11,24 +11,22 @@ import FBSDKCoreKit
 
 class DriverEditProfileViewController: UIViewController {
     
+    //Outlets
     @IBOutlet var profileImage: UIImageView!
-    
     @IBOutlet var profileName: UILabel!
-    
     @IBOutlet var cellNumberTextField: UITextField!
     @IBOutlet var carMakeTextField: UITextField!
     @IBOutlet var carModelTextField: UITextField!
     @IBOutlet var carColorTextField: UITextField!
-    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-    var cameFromDriverView = false
     
+    //Global values
     var cellNumber = ""
-    let semaphore = dispatch_semaphore_create(0);
-
-    // Mark - Fields
-    
     var FBid = ""
     var id = Int()
+    let semaphore = dispatch_semaphore_create(0)
+    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+    var cameFromDriverView = false
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -61,7 +59,7 @@ class DriverEditProfileViewController: UIViewController {
         
     }
     
-    
+    //Api call to get the user data
     func getUserData(token: String) {
         print("RETRIEVE USER DATA")
         
@@ -131,8 +129,7 @@ class DriverEditProfileViewController: UIViewController {
         
     }
 
-    
-    
+    //Saves the updated values for the profile
     @IBAction func saveButtonTapped(sender: UIButton) {
         let name = profileName.text
         
@@ -164,6 +161,7 @@ class DriverEditProfileViewController: UIViewController {
     
     
     // SOURCE: http://jamesonquave.com/blog/making-a-post-request-in-swift/
+    // Api call to save the updated values to the database
     func put(params : Dictionary<String, AnyObject>, url : String) {
         
         let request = NSMutableURLRequest(URL: NSURL(string: url)!)

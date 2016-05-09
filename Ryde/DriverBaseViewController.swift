@@ -48,6 +48,7 @@ class DriverBaseViewController: UIViewController, SlideMenuDelegate {
         }
     }
     
+    //Adds the slide menu button
     func addSlideMenuButton(){
         let btnShowMenu = UIButton(type: UIButtonType.System)
         btnShowMenu.setImage(self.defaultMenuImage(), forState: UIControlState.Normal)
@@ -57,6 +58,7 @@ class DriverBaseViewController: UIViewController, SlideMenuDelegate {
         self.navigationItem.leftBarButtonItem = customBarItem;
     }
     
+    //Sets the images for the slide menu
     func defaultMenuImage() -> UIImage {
         var defaultMenuImage = UIImage()
         
@@ -85,6 +87,7 @@ class DriverBaseViewController: UIViewController, SlideMenuDelegate {
         return defaultMenuImage;
     }
     
+    //Opens the slide menu when the slide menu button is pressed
     func onSlideMenuButtonPressed(sender : UIBarButtonItem){
         if (sender.tag == 10)
         {

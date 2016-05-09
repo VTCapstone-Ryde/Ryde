@@ -12,7 +12,7 @@ import CoreLocation
 
 class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKMapViewDelegate,CLLocationManagerDelegate, UITextFieldDelegate, HandleMapSearch, UISearchControllerDelegate, UISearchBarDelegate{
     
-    //needed fields
+    //needed fields that are passed from DriverMainViewController through the segue
     var riderName = "Blake Duncan"
     var rideID = 0
     var riderPhone = ""
@@ -28,6 +28,7 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
     //False if driver hasn't picked up rider and true otherwise
     var hasRider = false
     
+    //outlets
     @IBOutlet var headerLabel: UILabel!
     @IBOutlet var riderNameLabel: UILabel!
     @IBOutlet var webView: UIWebView!
@@ -57,13 +58,18 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //hide the search for destination functionality from the view
         destinationButton.hidden = true
         addressView.hidden = true
         
         //hide back button and add slide menu
         self.navigationItem.setHidesBackButton(true, animated:true);
         
+        //Set rider name label
         riderNameLabel.text = riderName
+        
+        //Driver has not picked up rider yet
         hasRider = false
         
         //Get the maps html file path and save it to a field
@@ -72,19 +78,20 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
         //now load the map
         loadMapView(1)
         
+        //Location values to be set
         self.mapView.showsUserLocation = true
         self.mapView.delegate = self
         self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
         self.locationManager.delegate = self
         self.locationManager.requestAlwaysAuthorization()
-        //        self.locationManager.requestLocation()
         self.locationManager.startUpdatingLocation()
-        
         geoCoder = CLGeocoder()
     }
     
-    
+    //Loads the map to the web view with the google maps javascript api call
     func loadMapView(showMap: Int){
+        
+        //convert coordinates to string so they can be used in the api call
         let tempDriverLat = String(driverLat)
         let tempDriverLng = String(driverLng)
         let driverCoord = "\(tempDriverLat),\(tempDriverLng)"
@@ -96,6 +103,7 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
         let destCoord = "\(tempSearchLat),\(tempSearchLng)"
         var googleMapQuery = ""
         
+        //If parameter is 1 get directions for pickup else get directions for drop off
         if showMap == 1 {
             googleMapQuery = mapsHtmlFilePath! + "?start=\(driverCoord)&end=\(riderCoord)&traveltype=DRIVING"
         } else {
@@ -122,37 +130,44 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
         webView.loadRequest(request)
     }
     
+    //Function called when pick up has been made
     func pickupConfirmed(){
+        
+        //Change lavel values and hide call and cancel button
         headerLabel.text = "Drop Off"
         self.driverButton.setTitle("Ride Over", forState: .Normal)
         hasRider = true
         callButton.hidden = true
         cancelButton.hidden = true
         
+        //If rider entered a final destination
         if (destLat != 0 || destLng != 0){
-        //load new directions
-        let tempDriverLat = String(riderLat)
-        let tempDriverLng = String(riderLng)
-        let driverCoord = "\(tempDriverLat),\(tempDriverLng)"
+            
+            //load new directions
+            let tempDriverLat = String(riderLat)
+            let tempDriverLng = String(riderLng)
+            let driverCoord = "\(tempDriverLat),\(tempDriverLng)"
+            let tempDropLat = String(destLat)
+            let tempDropLng = String(destLng)
+            let dropOffCoord = "\(tempDropLat),\(tempDropLng)"
         
-        let tempDropLat = String(destLat)
-        let tempDropLng = String(destLng)
-        let dropOffCoord = "\(tempDropLat),\(tempDropLng)"
+            //Google map javascript api call
+            let googleMapQuery: String = mapsHtmlFilePath! + "?start=\(driverCoord)&end=\(dropOffCoord)&traveltype=DRIVING"
         
-        let googleMapQuery: String = mapsHtmlFilePath! + "?start=\(driverCoord)&end=\(dropOffCoord)&traveltype=DRIVING"
-        
-        let mapQuery = googleMapQuery
-        
-        let url: NSURL? = NSURL(string: mapQuery)
-        
-        let request = NSURLRequest(URL: url!)
-        webView.loadRequest(request)
-        } else {
+            let mapQuery = googleMapQuery
+            let url: NSURL? = NSURL(string: mapQuery)
+            let request = NSURLRequest(URL: url!)
+            
+            //Load the web view with the directions
+            webView.loadRequest(request)
+            
+        } else { //If rider did not enter a final destination
+            //Ask driver if he would like to enter a destination
             let alertController = UIAlertController(title: "No rider desitnation entered",
                                                     message: "Would you like to enter a destination?",
                                                     preferredStyle: UIAlertControllerStyle.Alert)
             alertController.addAction(UIAlertAction(title: "Enter Destiniation", style: .Default, handler: { (action: UIAlertAction!) in
-                
+                //Display enter destination button so driver can enter one
                 self.destinationButton.hidden = false
                 self.addressView.hidden = false
                 
@@ -167,6 +182,7 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
         }
     }
     
+    //Function called if user would like to enter a final destination
     @IBAction func changeDestination(sender: UIButton) {
         
         let locationSearchTable = storyboard!.instantiateViewControllerWithIdentifier("LocationSearchTable") as! LocationSearchTable
@@ -226,13 +242,6 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
         loadMapView(2)
         self.destinationButton.hidden = true
         self.addressView.hidden = true
-
-        
-        //        The following code drops a pin where the user searched but we dont want that. Just in case im leaving it here.
-        
-        //        let span = MKCoordinateSpanMake(0.05, 0.05)
-        //        let region = MKCoordinateRegionMake(placemark.coordinate, span)
-        //        mapView.setRegion(region, animated: true)
     }
     
     // Mark - Cancel Search
@@ -270,7 +279,6 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
     }
     
     // Mark - Pick Up Button
-    
     @IBAction func pickupButtonPressed(sender: UIButton) {
         if !hasRider {
             
@@ -320,7 +328,6 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
     }
     
     // Mark - Call Rider Button
-    
     @IBAction func phoneButtonPressed(sender: UIButton) {
         
         if let url = NSURL(string: "tel://\(riderPhone)") {
@@ -330,8 +337,8 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
     }
     
     // SOURCE: http://jamesonquave.com/blog/making-a-post-request-in-swift/
+    //Post to end ride after drop off has been made
     func post(params : Dictionary<String, String>, url : String) {
-        print("end ride post start here")
         let request = NSMutableURLRequest(URL: NSURL(string: url)!)
         let session = NSURLSession.sharedSession()
         request.HTTPMethod = "POST"
@@ -385,7 +392,6 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
     
     // Mark - Generic POST function that takes in a JSON dictinoary and the URL to be POSTed to
     
-    
     // SOURCE: http://jamesonquave.com/blog/making-a-post-request-in-swift/
     func put(url : String) {
         
@@ -398,38 +404,6 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
         
         let task = session.dataTaskWithRequest(request, completionHandler: {data, response, error -> Void in
             print("Response: \(response)")
-            /**
-             let strData = NSString(data: data!, encoding: NSUTF8StringEncoding)
-             print("Body: \(strData)")
-             
-             let json: NSDictionary?
-             
-             do {
-             json = try NSJSONSerialization.JSONObjectWithData(data!, options: .MutableContainers) as? NSDictionary
-             } catch let dataError{
-             
-             // Did the JSONObjectWithData constructor return an error? If so, log the error to the console
-             print(dataError)
-             let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
-             print("Error could not parse JSON: '\(jsonStr)'")
-             // return or throw?
-             return
-             }
-             
-             // The JSONObjectWithData constructor didn't return an error. But, we should still
-             // check and make sure that json has a value using optional binding.
-             
-             if let parseJSON = json {
-             // Okay, the parsedJSON is here, let's get the value for 'success' out of it
-             let success = parseJSON["success"] as? Int
-             print("Succes: \(success)")
-             }
-             else {
-             // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
-             let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
-             print("Error could not parse JSON: \(jsonStr)")
-             }
-             **/
         })
         
         task.resume()
@@ -489,16 +463,7 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
         /* Only one reverse geocoding can be in progress at a time hence we need to cancel existing
          one if we are getting location updates */
         geoCoder.cancelGeocode()
-        geoCoder.reverseGeocodeLocation(location, completionHandler: { (data, error) -> Void in
-//            guard let placeMarks = data as [CLPlacemark]! else {
-//                return
-//            }
-            //let loc: CLPlacemark = placeMarks[0]
-            //let addressDict : [NSString:NSObject] = loc.addressDictionary as! [NSString: NSObject]
-            //let addrList = addressDict["FormattedAddressLines"] as! [String]
-            
-            //let address = addrList[0]
-        })
+        geoCoder.reverseGeocodeLocation(location, completionHandler: { (data, error) -> Void in })
         
     }
     
