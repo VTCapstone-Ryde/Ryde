@@ -19,12 +19,16 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
 
     var currentUser: NSDictionary?
     
+    //results returned from our query to the server
     var searchBarResults = [NSDictionary]()
     
+    //group of members that we have selected to add to the group
     var selectedGroupMembers = [String]()
     
+    //our new group being created
     var newGroup = NSDictionary()
     
+    //gets a reference to the search bar
     var activeSearchBar: UISearchBar?
     
     // MARK: - IBOutlets
@@ -43,6 +47,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
     
     // MARK: - IBActions
     
+    //adds the group to the database if information is properly filled out
     @IBAction func saveGroup(sender: UIBarButtonItem) {
         
         if (groupNameTextField.text == "") {
@@ -64,6 +69,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
             let description = groupDescriptionTextView.text
             let title = groupNameTextField.text
             
+            //packages up JSON object and sends it to the server
             let JSONGroupObject: [String : String] = [
                 
                 "description":  description!,
@@ -77,12 +83,11 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
         }
     }
     
-    // MARK: - Generic POST function that takes in a JSON dictinoary and the URL to be POSTed to
+    // MARK: - Server interactions
     
     
-    // SOURCE: http://jamesonquave.com/blog/making-a-post-request-in-swift/
+    //Posts the group to the server
     func postGroup(params : NSDictionary, url : String) {
-        
         
         print("POSTING TO GROUP")
         
@@ -116,8 +121,6 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
                 return
             }
             
-            
-            
             // The JSONObjectWithData constructor didn't return an error. But, we should still
             // check and make sure that json has a value using optional binding.
             if let parseJSON = json {
@@ -141,6 +144,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
                         self.postGroupUser(JSONGroupUserObject, url: "http://\(self.appDelegate.baseURL)/Ryde/api/groupuser")
                     }
                     
+                    //add the current user to the group as an admin
                     let currentID = String(self.currentUser!["id"]!)
                     
                     let groupDict = [ "id" : groupID ]
@@ -167,18 +171,14 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
                         self.presentViewController(alertController, animated: true, completion: nil)
                     })
                 }
-                    //remove the group since it didn't work right
-                else {
-                    
-                }
             }
         })
         
         task.resume()
     }
 
+    //Adds a member to the groupuser table, making them a member of the group
     func postGroupUser(params : NSDictionary, url : String) {
-        
         
         print("POSTING TO GROUPUSER")
         
@@ -263,6 +263,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
     }
     
     /*
+     * Taken from Keyboard App, developed by Osman Balci
      ---------------------------------------------
      MARK: - Register and Unregister Notifications
      ---------------------------------------------
@@ -279,6 +280,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
     }
     
 //    /*
+//  Taken from Keyboard App, developed by Osman Balci
 //     ---------------------------------------
 //     MARK: - Handling Keyboard Notifications
 //     ---------------------------------------
@@ -301,7 +303,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
             name:       UIKeyboardWillHideNotification,
             object:     nil)
     }
-    
+    // Taken from Keyboard App, developed by Osman Balci
     // This method is called upon Keyboard Will SHOW Notification
     func keyboardWillShow(sender: NSNotification) {
         
@@ -349,6 +351,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
         }
     }
     
+    //  Taken from Keyboard App, developed by Osman Balci
     // This method is called upon Keyboard Will HIDE Notification
     func keyboardWillHide(sender: NSNotification) {
         
@@ -362,8 +365,9 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
         scrollView.scrollIndicatorInsets = contentInsets
     }
     
-    // Mark: - Search Bar Delegates
+    // MARK: - Search Bar Delegates
     
+    //Delegates to handle what happens during each search bar event
     func searchBarTextDidBeginEditing(searchBar: UISearchBar) {
         searchActive = true;
         activeSearchBar = searchBar
@@ -383,6 +387,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
         searchBar.resignFirstResponder()
     }
     
+    //each time the text is changed, query the server for the list of users containing the searched text
     func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
         
         //Clear out all old search results
@@ -454,7 +459,6 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
                     })
                 }
                 else {
-                    // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
                     let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
                     print("Error could not parse JSON: \(jsonStr!)")
                 }
@@ -470,7 +474,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
         }
     }
     
-    // Mark - TableView Delegates
+    // MARK: - TableView Delegates
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return searchBarResults.count
@@ -486,6 +490,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
         
         let memberRow = searchBarResults[row]
         
+        //Set the rows textlabel to the full name of the user found
         if let memberFirstName = memberRow["firstName"] as? String {
             if let memberLastName = memberRow["lastName"] as? String {
                 cell.textLabel!.text = memberFirstName + " " + memberLastName
@@ -514,6 +519,7 @@ class AddGroupViewController: UIViewController, UISearchBarDelegate, UITableView
         let memberRow = searchBarResults[row]
         let memberID = String(memberRow["id"]!)
         
+        //uncheck or check a user if they are selected to join a group
         if let foundIndex = selectedGroupMembers.indexOf(memberID) {
             //remove the item at the found index
             cell.accessoryType = UITableViewCellAccessoryType.None

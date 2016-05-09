@@ -18,12 +18,16 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
     
     var searchBarResults = [NSDictionary]()
     
+    //list of groups that are returned by the search
     var groupDictionary = [NSDictionary]()
     
+    //list of groups that are to be requested (just the ids)
     var groupList = [String]()
     
+    //groups that have been chosen to send requests to
     var selectedGroups = [String]()
     
+    //bool that tells us if the searchbar is selected
     var searchActive : Bool = false
     
     // MARK: - IBOutlets
@@ -32,6 +36,7 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
     
     // MARK: - IBActions
     
+    //When the user presses send, it checks if you have selected any groups and then send requests
     @IBAction func sendRequestToGroups(sender: UIBarButtonItem) {
         
         if (selectedGroups.count == 0) {
@@ -74,15 +79,18 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
     
     // MARK: - Post method to post requests to groups
     
+    //adds the requests to the database
     func postRequests() {
         
         print(groupDictionary)
+        //gets all of the ids of the groups to be requested
         for group in groupDictionary {
             if let groupID = group["id"] {
                 groupList.append(String(groupID))
             }
         }
         
+        //iterates over groups and adds them to the requested tabel
         for group in selectedGroups {
             
             if (!groupList.contains(group)) {
@@ -114,35 +122,6 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
                             return
                         }
                         
-//                        let json: [NSDictionary]?
-//                        
-//                        do {
-//                            
-//                            json = try NSJSONSerialization.JSONObjectWithData(data!, options: .MutableLeaves) as? [NSDictionary]
-//                            
-//                        } catch let dataError{
-//                            
-//                            // Did the JSONObjectWithData constructor return an error? If so, log the error to the console
-//                            print(dataError)
-//                            let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
-//                            print("Error could not parse JSON: '\(jsonStr!)'")
-//                            // return or throw?
-//                            return
-//                        }
-//                        
-//                        // The JSONObjectWithData constructor didn't return an error. But, we should still
-//                        // check and make sure that json has a value using optional binding.
-//                        if let parseJSON = json {
-//                            // Okay, the parsedJSON is here, lets store its values into an array
-//                            return
-//                        }
-//                        else {
-//                            // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
-//                            let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
-//                            print("Error could not parse JSON: \(jsonStr!)")
-//                        }
-                        
-                        
                     })
                     
                     task.resume()
@@ -172,6 +151,7 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
         searchBar.resignFirstResponder()
     }
     
+    //each time the text is changed, query the server for the list of groups containing the searched text
     func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
         
         //Clear out all old search results
@@ -205,11 +185,6 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
                     return
                 }
                 
-                // Print out response string
-                //let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
-                //print("responseString = \(responseString!)")
-                
-                
                 let json: [NSDictionary]?
                 
                 do {
@@ -237,14 +212,10 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
                     })
                 }
                 else {
-                    // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
                     let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
                     print("Error could not parse JSON: \(jsonStr!)")
                 }
-                
-                
             })
-            
             task.resume()
             
         }
@@ -269,6 +240,7 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
         
         let groupRow = searchBarResults[row]
         
+        //sets the textlabel to the title of the group
         if let groupTitle = groupRow["title"] as? String {
             cell.textLabel!.text = groupTitle
             cell.textLabel?.textColor = UIColor.whiteColor()
@@ -295,6 +267,7 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
         let groupRow = searchBarResults[row]
         let groupID = String(groupRow["id"]!)
         
+        //adds or removes the group from the list of groups to be requested
         if let foundIndex = selectedGroups.indexOf(groupID) {
             //remove the item at the found index
             cell.accessoryType = UITableViewCellAccessoryType.None

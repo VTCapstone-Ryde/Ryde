@@ -10,24 +10,31 @@ import UIKit
 
 class GroupDetailsTableViewController: UITableViewController {
     
-    // Mark - Fields
+    // MARK: -  Fields
     
+    //the information we get back from the server about the group
     var groupInfo: NSDictionary?
     
     let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
     
+    //list of admins for this group
     var adminList = [NSDictionary]()
     
+    //list of members in this group
     var memberList = [NSDictionary]()
     
+    //list of users that have requested to join this group
     var requestList = [NSDictionary]()
     
+    //current users information
     var currentUser : NSDictionary?
     
+    //check if we are an admin or not
     var admin = false
     
-    // Mark - IBActions
+    // MARK: -  IBActions
     
+    //unwind segue that refreshes the data on the page
     @IBAction func unwindToGroupDetailsViewController(sender: UIStoryboardSegue) {
         self.editGroupButton.enabled = false
         self.editGroupButton.tintColor = UIColor.clearColor()
@@ -37,26 +44,16 @@ class GroupDetailsTableViewController: UITableViewController {
         
     }
     
-    // Mark - IBOutlet
+    // MARK: -  IBOutlet
     
     @IBOutlet var editGroupButton: UIBarButtonItem!
     
-    func handleRefresh(refreshControl : UIRefreshControl) {
-        
-        self.editGroupButton.enabled = false
-        self.editGroupButton.tintColor = UIColor.clearColor()
-        
-        getGroupUsers()
-        getGroupAdmins()
-        
-        refreshControl.endRefreshing()
-    }
-    
-    // Mark - Lifecycle Methods
+    // MARK: -  Lifecycle Methods
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        //adds the refresh control to the page
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(TimeslotsTableViewController.handleRefresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         self.refreshControl = refreshControl
@@ -67,6 +64,7 @@ class GroupDetailsTableViewController: UITableViewController {
         
     }
     
+    //each time the view appears, refresh the data and the nav bar title
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
@@ -83,6 +81,21 @@ class GroupDetailsTableViewController: UITableViewController {
         getGroupAdmins()
     }
     
+    //MARK: - Refresh method
+    
+    //function to refresh the contents of this page
+    func handleRefresh(refreshControl : UIRefreshControl) {
+        
+        self.editGroupButton.enabled = false
+        self.editGroupButton.tintColor = UIColor.clearColor()
+        
+        getGroupUsers()
+        getGroupAdmins()
+        
+        refreshControl.endRefreshing()
+    }
+    
+    //retrieves the users that are members of our selected group
     func getGroupUsers() {
         
         print("RETRIEVE GROUPS USERS")
@@ -132,13 +145,12 @@ class GroupDetailsTableViewController: UITableViewController {
             if let parseJSON = json {
                 print(parseJSON)
                 self.memberList = parseJSON as [NSDictionary]
-                // Okay, the parsedJSON is here, lets store its values into an array
+                // Reload the table with our new data
                 dispatch_async(dispatch_get_main_queue(), {
                     self.tableView.reloadData()
                 })
             }
             else {
-                // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
                 let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
                 print("Error could not parse JSON: \(jsonStr!)")
             }
@@ -147,11 +159,9 @@ class GroupDetailsTableViewController: UITableViewController {
         })
         
         task.resume()
-        
-        //        performSegueWithIdentifier("Home", sender: self)
-        
     }
     
+    //retreives which users in the group are admins
     func getGroupAdmins() {
         print("RETRIEVE GROUPS ADMINS")
         
@@ -203,6 +213,7 @@ class GroupDetailsTableViewController: UITableViewController {
                 
                 let userID = String(self.currentUser!["id"]!)
                 
+                //If we find that our current user is an admin, unhide the edit group button and get the requests for the group
                 for admin in self.adminList {
                     let adminID = String(admin["id"]!)
                     
@@ -223,7 +234,6 @@ class GroupDetailsTableViewController: UITableViewController {
                 })
             }
             else {
-                // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
                 let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
                 print("Error could not parse JSON: \(jsonStr!)")
             }
@@ -234,6 +244,7 @@ class GroupDetailsTableViewController: UITableViewController {
         task.resume()
     }
     
+    //retrieves the list of users that have requested to join a group
     func getGroupRequests() {
         print("RETRIEVE GROUPS REQUESTS")
         
@@ -289,7 +300,6 @@ class GroupDetailsTableViewController: UITableViewController {
                 })
             }
             else {
-                // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
                 let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
                 print("Error could not parse JSON: \(jsonStr!)")
             }
@@ -301,9 +311,10 @@ class GroupDetailsTableViewController: UITableViewController {
         
     }
     
-    // Mark - TableView Delegates
+    // MARK: -  TableView Delegates
     
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+        //if we are an admin, we add the section for requests to join
         if (self.admin) {
             return 4
         }
@@ -313,7 +324,7 @@ class GroupDetailsTableViewController: UITableViewController {
     }
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
+        //if we are an admin, we add the section for requests to join
         if (self.admin) {
             if (section == 0) {
                 return 1
@@ -354,6 +365,7 @@ class GroupDetailsTableViewController: UITableViewController {
         
         let cell = tableView.dequeueReusableCellWithIdentifier("groupDetailCell") as UITableViewCell!
         
+        //Set the description and list of admins
         if (section == 0) {
             if let dict = groupInfo {
                 print(dict)
@@ -376,12 +388,14 @@ class GroupDetailsTableViewController: UITableViewController {
             }
         }
         
+        //if we are an admin, we add the section for requests to join
         if (self.admin) {
             
             if (section == 2) {
                 
                 let otherCell = tableView.dequeueReusableCellWithIdentifier("groupRequestCell") as! GroupDetailsTableViewCell
                 
+                //allow admins to request or deny users to join the group
                 if (requestList.count > 0) {
                     let requestInfo = requestList[row]
                     if let firstName = requestInfo["firstName"] as? String {
@@ -474,6 +488,8 @@ class GroupDetailsTableViewController: UITableViewController {
     }
     
     //MARK: - accept/deny button actions
+    
+    //tells the server to add the user to the group
     func acceptRequest(sender: UIButton) {
         
         let requestUser = requestList[sender.tag]
@@ -495,6 +511,7 @@ class GroupDetailsTableViewController: UITableViewController {
             let groupDict = [ "id" : id ]
             let memberDict = [ "id" : requestUserIDString ]
             
+            //creates a JSON object to send to the server
             let JSONGroupUserObject = [
                 "admin": "0",
                 "groupId": groupDict,
@@ -525,6 +542,7 @@ class GroupDetailsTableViewController: UITableViewController {
                     return
                 }
                 
+                //update the member list
                 if let parseJSON = json {
                     self.memberList.append(parseJSON)
                     dispatch_async(dispatch_get_main_queue(), {
@@ -540,6 +558,7 @@ class GroupDetailsTableViewController: UITableViewController {
         
     }
     
+    //tells the server that we do not want this user to be a member of the group
     func denyRequest(sender: UIButton) {
         let requestUser = requestList[sender.tag]
         if let requestUserID = requestUser["id"] {
@@ -563,6 +582,7 @@ class GroupDetailsTableViewController: UITableViewController {
 
                         return
                 }
+                //update the tableview
                 dispatch_async(dispatch_get_main_queue(), {
                     self.requestList.removeAtIndex(sender.tag)
                     self.tableView.reloadData()
@@ -577,6 +597,7 @@ class GroupDetailsTableViewController: UITableViewController {
     // MARK: - prepare for segue
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        //if we going to edit the group, send the neccessary information along
         if (segue.identifier == "EditGroup") {
             let dest = segue.destinationViewController as! EditGroupDetailsViewController
             dest.groupInfo = self.groupInfo

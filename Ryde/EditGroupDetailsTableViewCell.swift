@@ -11,6 +11,7 @@ import UIKit
 class EditGroupDetailsTableViewCell: UITableViewCell {
 
     
+    //label to represent the member
     @IBOutlet var memberNameLabel: UILabel!
     
     @IBOutlet var changeAdminStatusButton: UIButton!

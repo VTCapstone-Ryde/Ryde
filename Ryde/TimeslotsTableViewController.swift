@@ -10,28 +10,33 @@ import UIKit
 
 class TimeslotsTableViewController: UITableViewController {
 
-    // Mark - Fields
+    // MARK: -  Fields
     
     var groupInfo: NSDictionary?
     
+    //array that holds the timeslots for the group
     var timeslotInfo = [NSDictionary]()
-    
-//    var tsIDtoNumDrivers = [Int:Int]()
     
     let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
     
     var numOfDrivers = 0
     
+    //list to hold all of the members in the group
     var memberList = [NSDictionary]()
     
+    //list to hold all of the drivers of a timeslot
     var driverList = [NSDictionary]()
     
+    //the timeslot we have selected to look at
     var selectedTimeSlot : NSDictionary?
+    
+    //MARK: - Lifecycle Methods
     
     override func viewDidLoad() {
         
         super.viewDidLoad()
         
+        //add refresh control
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(TimeslotsTableViewController.handleRefresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         self.refreshControl = refreshControl
@@ -40,9 +45,12 @@ class TimeslotsTableViewController: UITableViewController {
         
         self.title = "\(groupInfo!["title"] as! String): Timeslot"
         
+        //get the timeslot info
         getData()
         
     }
+    
+    //MARK: - Refresh method
     
     func handleRefresh(refreshControl : UIRefreshControl) {
         
@@ -51,14 +59,13 @@ class TimeslotsTableViewController: UITableViewController {
         refreshControl.endRefreshing()
     }
     
-    // MARK - Get Data
+    // MARK: -  http server requests
     
     func getData() {
         
         // Fetch All Timeslots (if any) for THIS group
         
         let url = NSURL(string: "http://\(self.appDelegate.baseURL)/Ryde/api/timeslot/timeslotsForGroupSorted/\(String(groupInfo!["id"]!))")
-        //        let url = NSURL(string: "http://jupiter.cs.vt.edu/Ryde/api/user")
         
         print(url)
         
@@ -67,9 +74,6 @@ class TimeslotsTableViewController: UITableViewController {
         
         // Set request HTTP method to GET. It could be POST as well
         request.HTTPMethod = "GET"
-        
-        // If needed you could add Authorization header value
-        //request.addValue("Token token=884288bae150b9f2f68d8dc3a932071d", forHTTPHeaderField: "Authorization")
         
         // Execute HTTP Request
         let task = NSURLSession.sharedSession().dataTaskWithRequest(request, completionHandler: {data, response, error -> Void in
@@ -80,11 +84,6 @@ class TimeslotsTableViewController: UITableViewController {
                 print("error=\(error)")
                 return
             }
-            
-            // Print out response string
-            //            let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
-            //            print("responseString = \(responseString!)")
-            
             
             let json: [NSDictionary]?
             
@@ -132,6 +131,7 @@ class TimeslotsTableViewController: UITableViewController {
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
+        //check to see if timeslots have loaded yet
         if let timeSlotsPerDate = timeslotInfo[section]["timeslots"] {
             return timeSlotsPerDate.count
         }
@@ -141,8 +141,10 @@ class TimeslotsTableViewController: UITableViewController {
     
     }
     
+    //sets the title for each section to the appropriate date
     override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         
+        //make the date formatter
         let calendar = NSCalendar.currentCalendar()
         calendar.timeZone = NSTimeZone(abbreviation: "GMT")!
         let dateFormatter = NSDateFormatter()
@@ -151,6 +153,7 @@ class TimeslotsTableViewController: UITableViewController {
         
         if let timeSlotDate = timeslotInfo[section]["date"] {
             
+            //split the string by date and time
             let exampleServerStartDateArray = timeSlotDate.componentsSeparatedByString("T")
             let exampleServerStartDate = exampleServerStartDateArray[0]
             
@@ -206,21 +209,18 @@ class TimeslotsTableViewController: UITableViewController {
         }
     }
     
+    //method performed to display each cell
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCellWithIdentifier("timeslotCell", forIndexPath: indexPath)
         
+        //Sets the text for the timeslot. If the timeslots are both AM or PM, only set 1 label. Otherwise do both.
         if let timeSlotList = timeslotInfo[indexPath.section]["timeslots"] as? [[String: AnyObject]]{
             
             var AMPMLabelStart = "AM"
             var AMPMLabelEnd = "AM"
 
             let timeSlotDic = (timeSlotList)[indexPath.row]
-            
-//            let id = timeSlotDic["id"] as! Int
-            
-//            cell.detailTextLabel?.text = "Driver(s): \(tsIDtoNumDrivers[id]!)"
-
             
             var startTime = timeSlotDic["startTime"]!.componentsSeparatedByString("T")[1].componentsSeparatedByString("-")[0]
             startTime = startTime[startTime.startIndex..<startTime.endIndex.advancedBy(-3)]
@@ -239,10 +239,6 @@ class TimeslotsTableViewController: UITableViewController {
                 startTime = "Midnight"
             }
             
-            
-            
-            
-            
             var endTime = timeSlotDic["endTime"]!.componentsSeparatedByString("T")[1].componentsSeparatedByString("-")[0]
             endTime = endTime[endTime.startIndex..<endTime.endIndex.advancedBy(-3)]
             var endTimeHour = Int(endTime[endTime.startIndex..<endTime.startIndex.advancedBy(2)])
@@ -260,8 +256,7 @@ class TimeslotsTableViewController: UITableViewController {
                 endTime = "Midnight"
             }
             
-            
-            
+            //sets the text
             if AMPMLabelStart == AMPMLabelEnd {
                 cell.textLabel?.text = "\(startTime) - \(endTime) \(AMPMLabelStart)"
             }
@@ -294,10 +289,10 @@ class TimeslotsTableViewController: UITableViewController {
         getData()
     }
     
-    // MARK - Prepare for Segue
+    // MARK: -  Prepare for Segue
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        
+        //pass the neccessary information along if we are editing
         if segue.identifier == "EditTimeslot" {
             let dest = segue.destinationViewController as! DetailTimeslotViewController
             dest.groupInfo = self.groupInfo

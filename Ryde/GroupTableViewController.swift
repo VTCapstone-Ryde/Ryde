@@ -18,20 +18,26 @@ class GroupTableViewController: UITableViewController {
         
     let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
 
+    //array of the groups the current user is a member of
     var groupDictionary = [NSDictionary]()
     
+    //nsdictionary of the group we have selected to view more about
     var selectedGroupInfo: NSDictionary?
     
+    //variable set when user logs in to hold users information
     var currentUser: NSDictionary?
     
     // Mark - IBActions
     
+    //action taken when add group is pressed
     @IBAction func addGroupPressed(sender: UIBarButtonItem) {
     }
     
+    //action taken when search for group is pressed
     @IBAction func searchForGroupPressed(sender: UIBarButtonItem) {
     }
     
+    //unwind segue performed to get back to this page
     @IBAction func unwindToGroupsViewController(sender: UIStoryboardSegue) {
         
     }
@@ -41,6 +47,7 @@ class GroupTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        //get rid of extra tableview rows
         tableView.tableFooterView = UIView()
         
         self.navigationController!.view.backgroundColor = UIColor.init(patternImage: UIImage(named: "BackgroundMain")!)
@@ -53,6 +60,7 @@ class GroupTableViewController: UITableViewController {
         getUserInfo()
     }
     
+    //retrieves the users information form the server
     func getUserInfo() {
         print("RETRIEVE USER INFO")
         
@@ -66,9 +74,6 @@ class GroupTableViewController: UITableViewController {
         // Set request HTTP method to GET. It could be POST as well
         request.HTTPMethod = "GET"
         
-        // If needed you could add Authorization header value
-        //request.addValue("Token token=884288bae150b9f2f68d8dc3a932071d", forHTTPHeaderField: "Authorization")
-        
         // Execute HTTP Request
         let task = NSURLSession.sharedSession().dataTaskWithRequest(request, completionHandler: {data, response, error -> Void in
             
@@ -78,11 +83,6 @@ class GroupTableViewController: UITableViewController {
                 print("error=\(error)")
                 return
             }
-            
-            // Print out response string
-            //let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
-            //print("responseString = \(responseString!)")
-            
             
             let json: NSDictionary?
             
@@ -103,13 +103,13 @@ class GroupTableViewController: UITableViewController {
             // The JSONObjectWithData constructor didn't return an error. But, we should still
             // check and make sure that json has a value using optional binding.
             if let parseJSON = json {
-                // Okay, the parsedJSON is here, lets store its values into an array
+                // Okay, the parsedJSON is here, lets store its values into the currentUser variable
                 self.currentUser = parseJSON as NSDictionary
                 self.appDelegate.currentUser = self.currentUser
                 self.getUserGroups()
             }
             else {
-                // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
+                //error handling
                 let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
                 print("Error could not parse JSON: \(jsonStr!)")
             }
@@ -122,11 +122,11 @@ class GroupTableViewController: UITableViewController {
     }
     
     // Mark - Retrieve the users groups from the server
-    
     func getUserGroups() {
         
         print("RETRIEVE USER GROUPS")
         
+        //check that current user is set
         if let userID = currentUser!["id"] {
             
             let url = NSURL(string: "http://\(self.appDelegate.baseURL)/Ryde/api/group/user/\(userID)")
@@ -139,9 +139,6 @@ class GroupTableViewController: UITableViewController {
             // Set request HTTP method to GET. It could be POST as well
             request.HTTPMethod = "GET"
             
-            // If needed you could add Authorization header value
-            //request.addValue("Token token=884288bae150b9f2f68d8dc3a932071d", forHTTPHeaderField: "Authorization")
-            
             // Execute HTTP Request
             let task = NSURLSession.sharedSession().dataTaskWithRequest(request, completionHandler: {data, response, error -> Void in
                 
@@ -151,11 +148,6 @@ class GroupTableViewController: UITableViewController {
                     print("error=\(error)")
                     return
                 }
-                
-                // Print out response string
-                //let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
-                //print("responseString = \(responseString!)")
-                
                 
                 let json: [NSDictionary]?
                 
@@ -183,7 +175,6 @@ class GroupTableViewController: UITableViewController {
                     })
                 }
                 else {
-                    // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
                     let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
                     print("Error could not parse JSON: \(jsonStr!)")
                 }
@@ -207,6 +198,7 @@ class GroupTableViewController: UITableViewController {
         let row = indexPath.row
         let cell = tableView.dequeueReusableCellWithIdentifier("groupCell") as UITableViewCell!
 
+        //set the textlabel of the tableviewcell as the title of our group
         if let groupTitle = groupDictionary[row]["title"] as? String {
             print(groupTitle)
             cell.textLabel!.text = groupTitle
@@ -219,21 +211,25 @@ class GroupTableViewController: UITableViewController {
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         let row = indexPath.row
         
+        //since we selected this row, get ready to pass it on to the next view
         selectedGroupInfo = groupDictionary[row]
         performSegueWithIdentifier("GroupSelected", sender: nil)
     }
     
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        //segue to the group details page
         if (segue.identifier == "GroupSelected") {
             let dest = segue.destinationViewController as! GroupDetailsTableViewController
             dest.groupInfo = selectedGroupInfo
             dest.currentUser = currentUser
         }
+        //segue to the add group page with our current users information
         else if (segue.identifier == "AddGroup") {
             let dest = segue.destinationViewController as! AddGroupViewController
             dest.currentUser = currentUser
         }
+        //segue to the search groups page with the current group dictionary so we do not display groups we already belong to
         else if (segue.identifier == "SearchGroups") {
             let dest = segue.destinationViewController as! SearchGroupsTableViewController
             dest.groupDictionary = self.groupDictionary

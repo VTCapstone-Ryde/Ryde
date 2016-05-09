@@ -22,18 +22,30 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
     
     //MARK: - Fields
     
+    //list of members returned by our search
     var searchBarResults = [NSDictionary]()
+    //list of members designated to drive for the timeslot
     var selectedGroupMembers = [NSDictionary]()
+    //object to represent the timeslot we are creating
     var newTimeslot = NSDictionary()
+    //reference to the search bar
     var activeSearchBar: UISearchBar?
     let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+    //bool to tell us if the search bar is active
     var searchActive : Bool = false
+    //info of the group
     var groupInfo : NSDictionary?
+    //info of the current timeslot. Empty if creating a timeslot
     var timeslotInfo : NSDictionary?
+    //list of members in the group
     var memberList = [NSDictionary]()
+    //list of drivers selected to be a part of the group
     var driverList = [NSDictionary]()
+    //list of drivers that were initially in the timeslot
     var initialDriverList = [NSDictionary]()
+    //bool to tell us if we are creating a new group or editing one
     var add = false
+    //reference to the textfield being used at this moment
     var activeTextField = UITextField()
     
     //MARK: - Lifecycle Methods
@@ -77,6 +89,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
     override func viewWillAppear(animated: Bool) {
         self.searchBar(self.groupMemberSearchBar, textDidChange: "")
         
+        //if we are adding, hide the delete timeslot button
         if (add) {
             deleteTimeslotButton.hidden = true
         }
@@ -88,6 +101,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
     
     //MARK: - IBActions
     
+    //Check if this is the users certain action, then delete the timeslot
     @IBAction func deleteTimeslot(sender: UIButton) {
         let alertController = UIAlertController(title: "Are you sure?", message: nil, preferredStyle: UIAlertControllerStyle.Alert)
         let okAction = UIAlertAction(title: "Delete", style: UIAlertActionStyle.Destructive, handler: { (action:UIAlertAction) -> Void in
@@ -100,6 +114,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
         self.presentViewController(alertController, animated: true, completion: nil)
     }
     
+    //Add the timeslot to the database. If editing the timeslot, just update the database
     @IBAction func saveTimeslot(sender: UIBarButtonItem) {
         
         if (startDateTextField.text == "" || endDateTextField.text == "") {
@@ -126,6 +141,9 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
 
     }
     
+    //MARK: - database operations
+    
+    //remove the timeslot from the database
     func deleteTimeslot() {
         print("DELETING TIMESLOT")
         
@@ -153,6 +171,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
         }
     }
     
+    //gets the list of drivers in a timeslot (used for edit)
     func getGroupDrivers(id: String) {
         print("RETRIEVE TIMESLOTS DRIVERS")
         
@@ -202,7 +221,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
                 self.driverList = parseJSON as [NSDictionary]
                 // Okay, the parsedJSON is here, lets store its values into an array
                 for driver in self.driverList {
-                        self.selectedGroupMembers.append(driver)
+                    self.selectedGroupMembers.append(driver)
                 }
                 
                 self.initialDriverList = self.driverList
@@ -221,11 +240,10 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
         })
         
         task.resume()
-
+        
     }
     
-    //MARK: - database operations
-    
+    //creates a timeslot from the information provided and adds it to the database. Then segues back.
     func createTimeslot() {
         print("CREATING TIMESLOT")
         
@@ -310,6 +328,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
         }
     }
     
+    //adds each selected member to the timeslot driver table
     func putDriverForTimeslot(memberID: String, timeslotID: String) {
         print("ADDING DRIVER TO TIMESLOT")
         
@@ -349,6 +368,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
 
     }
     
+    //performed when editing. Same as add except we dont make a new entry, just update the old
     func updateTimeslot() {
         print("UPDATING TIMESLOT")
         
@@ -436,6 +456,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
 
     }
     
+    //removes any drivers that were unselected for a timeslot (edit)
     func deleteDriverForTimeslot(driverID: String, timeslotID: String) {
         print("DELETING DRIVER FOR TIMESLOT")
         
@@ -458,8 +479,9 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
     }
     
     
-    //MARK: startDateTextField Done Button
+    //MARK: - startDateTextField Done Button
     
+    //adds a done button to the top of the keyboard for the date pickers
     func addDoneButtonOnKeyboard()
     {
         let doneToolbar: UIToolbar = UIToolbar(frame: CGRectMake(0, 0, 320, 50))
@@ -480,22 +502,27 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
         
     }
     
+    //hides the keyboard when done is pressed
     func doneButtonAction()
     {
         self.startDateTextField.resignFirstResponder()
         self.endDateTextField.resignFirstResponder()
     }
     
+    //MARK: - Textfield delegates
+    
     func textFieldDidBeginEditing(textField: UITextField) {
         
-        //if we are dealing with the bithday textfield
+        //if we are dealing with the date and time textfields
         if (textField == startDateTextField || textField == endDateTextField)
         {
+            //set the format
             let df = NSDateFormatter()
             df.dateFormat = "MM/dd/yy hh:mm a"
             activeTextField = textField
             let thisDate = df.dateFromString(activeTextField.text!)
 
+            //update the date picker to have the prefilled date
             let datePicker:UIDatePicker = UIDatePicker()
             datePicker.datePickerMode = UIDatePickerMode.DateAndTime
             if let defaultDate = thisDate {
@@ -512,6 +539,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
         }
     }
     
+    //makes the textfield show the date from the database
     func updateTextfield(sender: UIDatePicker, textField: UITextField)
     {
         let dFormatter = NSDateFormatter();
@@ -547,6 +575,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
         searchBar.resignFirstResponder()
     }
     
+    //updates the tableview when the search bars text changes. Only uses local lists so no requests issued
     func searchBar(searchBar: UISearchBar, textDidChange searchText: String) {
         
         //Clear out all old search results
@@ -591,6 +620,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
         
         let memberRow = searchBarResults[row]
         
+        //sets the cells textlabel as the full name of the member of the group
         if let memberFirstName = memberRow["firstName"] as? String {
             if let memberLastName = memberRow["lastName"] as? String {
                 cell.textLabel!.text = memberFirstName + " " + memberLastName
@@ -598,6 +628,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
             }
         }
         
+        //show or hide the checkmark next to a driver
         if let _ = selectedGroupMembers.indexOf(memberRow) {
             //remove the item at the found index
             cell.accessoryType = UITableViewCellAccessoryType.Checkmark
@@ -617,6 +648,7 @@ class DetailTimeslotViewController: UIViewController, UITableViewDelegate, UITab
         
         let memberRow = searchBarResults[row]
         
+        //add or hide the checkmark next to a driver
         if let foundIndex = selectedGroupMembers.indexOf(memberRow) {
             //remove the item at the found index
             cell.accessoryType = UITableViewCellAccessoryType.None

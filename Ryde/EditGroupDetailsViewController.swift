@@ -21,20 +21,28 @@ class EditGroupDetailsViewController: UIViewController {
     
     var searchBarResults = [NSDictionary]()
     
+    //bool to allow new members to be added or not
     var addingNewMembers: Bool = false
     
+    //list of admins in the group
     var adminList = [NSDictionary]()
     
+    //list of members in the group
     var memberList = [NSDictionary]()
     
+    //list of members when the group began being edited
     var initialMemberList = [NSDictionary]()
     
+    //list of admins when the group began being edited
     var initialAdminList = [NSDictionary]()
     
+    //list of users that are selected at the end of editing
     var selectedGroupMembers = [NSDictionary]()
     
+    //reference to the search bar if active
     var activeSearchBar: UISearchBar?
     
+    //bool to tell us if the search bar is active
     var searchActive: Bool = false
     
     // MARK: - IBOutlets
@@ -52,7 +60,7 @@ class EditGroupDetailsViewController: UIViewController {
     
     // MARK: - IBActions
     
-    
+    //button press that allows new users to be added the group
     @IBAction func addNewMembersPressed(sender: AnyObject) {
         if (addingNewMembers) {
             addingNewMembers = false
@@ -74,13 +82,14 @@ class EditGroupDetailsViewController: UIViewController {
         }
     }
     
+    //segue to the edit timeslots page
     @IBAction func editTimeslotsPressed(sender: AnyObject) {
         
         performSegueWithIdentifier("timeslots", sender: self)
         
     }
     
-    
+    //checks that all of the groups fields are correctly filled out and valid.
     @IBAction func saveEditedGroupPressed(sender: UIBarButtonItem) {
         if (groupNameTextField.text == "") {
             let alertController = UIAlertController(title: "Blank Group Name", message: "Please enter a name for the group!", preferredStyle: UIAlertControllerStyle.Alert)
@@ -103,7 +112,7 @@ class EditGroupDetailsViewController: UIViewController {
             alertController.addAction(okAction)
             self.presentViewController(alertController, animated: true, completion: nil)
         }
-            //We have all of the fields ready, now we need to save the group and update the groupuser table
+        //We have all of the fields ready, now we need to save the group and update the groupuser table
         else {
             
             let description = groupDescriptionTextView.text
@@ -131,22 +140,14 @@ class EditGroupDetailsViewController: UIViewController {
             //gets all of the old admins that are no longer admins
             let removeAdminStatusSet = initialAdminSet.subtract(adminSet)
             
-            print("Admins removed from group: \(removeAdminStatusSet)")
-            
             //gets all of the new admins that were not admins before
             let addAdminStatusSet = adminSet.subtract(initialAdminSet)
-            
-            print("Admins added to group: \(addAdminStatusSet)")
             
             //gets all of the old members that are no longer members
             let removeMemberStatusSet = initialMemberSet.subtract(memberSet)
             
-            print("Members removed from group: \(removeMemberStatusSet)")
-            
             //gets all of the new members that were not members before
             let addMemberStatusSet = memberSet.subtract(initialMemberSet)
-            
-            print("Members added to group: \(addMemberStatusSet)")
             
             //set the group ID to the group we just updated
             let groupDict = [ "id" : id ]
@@ -200,7 +201,7 @@ class EditGroupDetailsViewController: UIViewController {
                 }
             }
             
-            
+            //display completed message
             let alertController = UIAlertController(title: "Group Successfully Updated!", message: "Your group \(title!) has been updated!", preferredStyle: UIAlertControllerStyle.Alert)
             let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.Cancel, handler: { (action:UIAlertAction) -> Void in
                 self.performSegueWithIdentifier("UnwindToDetails-Save", sender: nil)
@@ -210,6 +211,7 @@ class EditGroupDetailsViewController: UIViewController {
         }
     }
     
+    //removes the group from our group list after the user confirms the action
     @IBAction func deleteGroupPressed(sender: UIButton) {
         let alertController = UIAlertController(title: "Are you sure?", message: "Once a group is deleted, it cannot be recovered", preferredStyle: UIAlertControllerStyle.Alert)
         let okAction = UIAlertAction(title: "Delete", style: UIAlertActionStyle.Default, handler: { (action:UIAlertAction) -> Void in
@@ -227,6 +229,7 @@ class EditGroupDetailsViewController: UIViewController {
     
     //MARK: - HTTP request methods
     
+    //adds the new users to the group
     func postGroupUser(params : NSDictionary, url : String) {
         print("POSTING TO GROUPUSER")
         
@@ -271,6 +274,7 @@ class EditGroupDetailsViewController: UIViewController {
         task.resume()
     }
     
+    //updates the admins that were granted new status or taken status away
     func putGroupUser(url : String) {
         print("PUTTING TO GROUPUSER")
         
@@ -307,7 +311,7 @@ class EditGroupDetailsViewController: UIViewController {
         task.resume()
     }
 
-    
+    //updates the group in the database
     func putGroup(params : NSDictionary, url : String) {
         print("PUTTING UPDATE TO GROUP")
         
@@ -345,6 +349,7 @@ class EditGroupDetailsViewController: UIViewController {
 
     }
     
+    //deletes the group from the database
     func deleteGroup(url: String) {
         print("DELETING GROUP")
 
@@ -364,6 +369,7 @@ class EditGroupDetailsViewController: UIViewController {
         task.resume()
     }
     
+    //removes all of the users of the group from the relational database
     func deleteGroupUser(url: String) {
         print("DELETING GROUP USER")
         
@@ -384,7 +390,7 @@ class EditGroupDetailsViewController: UIViewController {
 
     }
     
-    // Mark - Lifecycle Methods
+    // MARK: -  Lifecycle Methods
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -396,6 +402,7 @@ class EditGroupDetailsViewController: UIViewController {
         
         groupMemberTableView.tableFooterView = UIView()
         
+        //sets the title and description of the group on page
         if let dict = groupInfo {
             if let title = dict["title"] as? String {
                 groupNameTextField.text = title
@@ -410,6 +417,7 @@ class EditGroupDetailsViewController: UIViewController {
         initialAdminList = adminList
         initialMemberList = memberList
         
+        //get rid of the clear button for the search bar
         for subview in self.groupMemberSearchBar.subviews {
             removeClearButtonFromSearch(subview)
         }
@@ -440,7 +448,7 @@ class EditGroupDetailsViewController: UIViewController {
         
     }
     
-    //    /*
+    //    /* // Taken from Keyboard App, developed by Osman Balci
     //     ---------------------------------------
     //     MARK: - Handling Keyboard Notifications
     //     ---------------------------------------
@@ -464,6 +472,7 @@ class EditGroupDetailsViewController: UIViewController {
             object:     nil)
     }
     
+    // Taken from Keyboard App, developed by Osman Balci
     // This method is called upon Keyboard Will SHOW Notification
     func keyboardWillShow(sender: NSNotification) {
         
@@ -511,6 +520,7 @@ class EditGroupDetailsViewController: UIViewController {
         }
     }
     
+    // Taken from Keyboard App, developed by Osman Balci
     // This method is called upon Keyboard Will HIDE Notification
     func keyboardWillHide(sender: NSNotification) {
         
@@ -622,23 +632,20 @@ class EditGroupDetailsViewController: UIViewController {
                         print("Error could not parse JSON: \(jsonStr!)")
                     }
                     
-                    
                 })
-                
                 task.resume()
-                
             }
             else {
                 groupMemberTableView.reloadData()
             }
-
         }
         else {
-            
+            //check if the search bars text is empty
             if(searchText == "") {
                 searchBarResults = memberList
             }
             else {
+                //sets the tableviews members
                 for member in memberList {
                     if let memberFirstName = member["firstName"] as? String {
                         if let memberLastName = member["lastName"] as? String {
@@ -647,8 +654,6 @@ class EditGroupDetailsViewController: UIViewController {
                             
                             let lowercaseSearch = searchText.lowercaseString
                             
-                            print("name: \(lowercaseQueryName)")
-                            print("search: \(lowercaseSearch)")
                             if lowercaseQueryName.rangeOfString(lowercaseSearch) != nil {
                                 searchBarResults.append(member)
                             }
@@ -662,7 +667,7 @@ class EditGroupDetailsViewController: UIViewController {
     }
     
 
-    // Mark - TableView Delegates
+    // MARK: -  TableView Delegates
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if (addingNewMembers) {
@@ -678,6 +683,7 @@ class EditGroupDetailsViewController: UIViewController {
         
         let row = indexPath.row
         
+        //if we are attempting to add new members, do things this way
         if (addingNewMembers) {
             let cell = groupMemberTableView.dequeueReusableCellWithIdentifier("addedMemberCell") as UITableViewCell!
             
@@ -685,6 +691,7 @@ class EditGroupDetailsViewController: UIViewController {
             
             let memberRow = searchBarResults[row]
             
+            //set the cells textlabel to the full name of the user
             if let memberFirstName = memberRow["firstName"] as? String {
                 if let memberLastName = memberRow["lastName"] as? String {
                     cell.textLabel!.text = memberFirstName + " " + memberLastName
@@ -692,6 +699,7 @@ class EditGroupDetailsViewController: UIViewController {
                 }
             }
 
+            //add or hide a checkmark
             if let _ = selectedGroupMembers.indexOf(memberRow) {
                 cell.accessoryType = UITableViewCellAccessoryType.Checkmark
             }
@@ -702,6 +710,7 @@ class EditGroupDetailsViewController: UIViewController {
             return cell
 
         }
+        //if we are searching through the existing list of members
         else if (searchActive) {
             let cell = groupMemberTableView.dequeueReusableCellWithIdentifier("memberCell") as! EditGroupDetailsTableViewCell!
             
@@ -709,17 +718,19 @@ class EditGroupDetailsViewController: UIViewController {
             
             let memberRow = searchBarResults[row]
             
+            //set the cells textlabel to the full name of the user
             if let memberFirstName = memberRow["firstName"] as? String {
                 if let memberLastName = memberRow["lastName"] as? String {
                     cell.memberNameLabel.text = memberFirstName + " " + memberLastName
                     cell.memberNameLabel.textColor = UIColor.whiteColor()
                 }
             }
+            //add a button to this cell
             cell.removeMember.tag = row
             cell.removeMember.addTarget(self, action: #selector(EditGroupDetailsViewController.removeMember(_:)), forControlEvents: UIControlEvents.TouchUpInside)
             
+            //add the revoke/make admin button
             cell.changeAdminStatusButton.setTitle("Make Admin", forState: UIControlState.Normal)
-            
             if let memberID = memberRow["id"] {
                 for admin in adminList {
                     if let adminID = admin["id"] {
@@ -730,13 +741,13 @@ class EditGroupDetailsViewController: UIViewController {
                     }
                 }
             }
-            
             cell.changeAdminStatusButton.tag = row
             cell.changeAdminStatusButton.addTarget(self, action: #selector(EditGroupDetailsViewController.changeAdminStatus(_:)), forControlEvents: UIControlEvents.TouchUpInside)
             
             return cell
 
         }
+        //we are just presenting members in the group
         else {
             let cell = groupMemberTableView.dequeueReusableCellWithIdentifier("memberCell") as! EditGroupDetailsTableViewCell!
             
@@ -755,6 +766,7 @@ class EditGroupDetailsViewController: UIViewController {
             
             cell.changeAdminStatusButton.setTitle("Make Admin", forState: UIControlState.Normal)
             
+            //add the revoke/make admin button
             if let memberID = memberRow["id"] {
                 for admin in adminList {
                     if let adminID = admin["id"] {
@@ -782,6 +794,7 @@ class EditGroupDetailsViewController: UIViewController {
             
             let memberRow = searchBarResults[row]
             
+            //if the member is already in the table, remove them, otherwise add them
             if let foundIndex = selectedGroupMembers.indexOf(memberRow) {
                 //remove the item at the found index
                 cell.accessoryType = UITableViewCellAccessoryType.None
@@ -853,6 +866,7 @@ class EditGroupDetailsViewController: UIViewController {
     //MARK: - prepare for segue
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        //pass on neccessary information to the next view or previous view
         if (segue.identifier == "UnwindToDetails-Save") {
             let dest = segue.destinationViewController as! GroupDetailsTableViewController
             dest.groupInfo = self.groupInfo
