@@ -55,6 +55,7 @@ class DriverMenuViewController: UIViewController, UITableViewDataSource, UITable
         updateArrayMenuOptions()
     }
     
+    //Set the slide menu options
     func updateArrayMenuOptions(){
         arrayMenuOptions.removeAll()
         arrayMenuOptions.append(["title":"Log Off", "icon":"HomeIcon"])
@@ -63,6 +64,7 @@ class DriverMenuViewController: UIViewController, UITableViewDataSource, UITable
         tblMenuOptions.reloadData()
     }
     
+    //Closes the slide menu
     @IBAction func onCloseMenuClick(button:UIButton!){
         btnMenu.tag = 0
         
@@ -84,6 +86,7 @@ class DriverMenuViewController: UIViewController, UITableViewDataSource, UITable
         })
     }
     
+    //Loads the slide menu table view with preset options
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell : UITableViewCell = tableView.dequeueReusableCellWithIdentifier("cellMenu")!
         

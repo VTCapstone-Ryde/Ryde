@@ -12,6 +12,7 @@ import FBSDKCoreKit
 
 class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationManagerDelegate   {
     
+    //Global Variables
     var driverName = "Blake Duncan"
     var startTime = "10:00 p.m."
     var endTime = "1:00 a.m."
@@ -19,7 +20,6 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
     var timeSlotID = 0
     var driverLat = 0.0
     var driverLng = 0.0
-    
     var carMakeString = ""
     var carModelString = ""
     var carColorString = ""
@@ -27,20 +27,22 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
     var phoneNumber = ""
     var email = ""
     var id = Int()
+    //Stores list of riders that haven't been assigned a driver
+    var nonActiveQueueDict = [NSDictionary]()
+    //Stores the next rider
+    var nextRideDictionary = NSDictionary()
+    //Stores the queue
+    var queueArray = NSArray()
+    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+    let semaphore = dispatch_semaphore_create(0)
     
+    //Outlets
     @IBOutlet var startLabel: UILabel!
     @IBOutlet var endLabel: UILabel!
     @IBOutlet var queueLabel: UILabel!
     @IBOutlet var headerLabel: UILabel!
     @IBOutlet var acceptRideButton: UIButton!
     @IBOutlet var btnShowMenu: UIBarButtonItem!
-    
-    var nonActiveQueueDict = [NSDictionary]()
-    var nextRideDictionary = NSDictionary()
-    var queueArray = NSArray()
-    
-    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-    let semaphore = dispatch_semaphore_create(0)
     
     // Location Manager instance
     let locationManager = CLLocationManager()
@@ -90,6 +92,7 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
         }
     }
     
+    //Function called when view reappears
     override func viewWillAppear(animated: Bool) {
         //Get non active rides to get the queue size
         getNonActiveRides()
@@ -111,13 +114,21 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
         }
     }
     
+    //Function called when view disappears
     override func viewWillDisappear(animated:Bool){
+        //Stop the timer
         updateTimer?.invalidate()
+        
+        //Stop the location manager
         locationManager.stopUpdatingLocation()
     }
     
+    //Sets the queue size label to the current queue size
     func updateQueueLabel(){
+        //Api call to return the non active rides
         updateNonActiveRides()
+        
+        //Set the label
         let queueSize = String(self.nonActiveQueueDict.count)
         self.queueLabel.text = "Queue Size: " + queueSize
     }
@@ -127,9 +138,9 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
         let locValue:CLLocationCoordinate2D = manager.location!.coordinate
         driverLat = locValue.latitude
         driverLng = locValue.longitude
-        print("locations = \(locValue.latitude) \(locValue.longitude)")
     }
     
+    //If queue size does not equal zero it gets the next rider and segues to the next view
     @IBAction func acceptRidePressed(sender: UIButton) {
         
         //Get non active rides to get the queue size
@@ -165,9 +176,8 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
     }
     
     // Mark - Generic POST function that takes in a JSON dictinoary and the URL to be POSTed to
-    
-    
     // SOURCE: http://jamesonquave.com/blog/making-a-post-request-in-swift/
+    // Put method is used to set the driver status
     func put(url : String) {
         
         let request = NSMutableURLRequest(URL: NSURL(string: url)!)
@@ -178,53 +188,15 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         
         let task = session.dataTaskWithRequest(request, completionHandler: {data, response, error -> Void in
-            print("Response: \(response)")
-            /**
-             let strData = NSString(data: data!, encoding: NSUTF8StringEncoding)
-             print("Body: \(strData)")
-             
-             let json: NSDictionary?
-             
-             do {
-             json = try NSJSONSerialization.JSONObjectWithData(data!, options: .MutableContainers) as? NSDictionary
-             } catch let dataError{
-             
-             // Did the JSONObjectWithData constructor return an error? If so, log the error to the console
-             print(dataError)
-             let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
-             print("Error could not parse JSON: '\(jsonStr)'")
-             // return or throw?
-             return
-             }
-             
-             // The JSONObjectWithData constructor didn't return an error. But, we should still
-             // check and make sure that json has a value using optional binding.
-             
-             if let parseJSON = json {
-             // Okay, the parsedJSON is here, let's get the value for 'success' out of it
-             let success = parseJSON["success"] as? Int
-             print("Succes: \(success)")
-             }
-             else {
-             // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
-             let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
-             print("Error could not parse JSON: \(jsonStr)")
-             }
-             **/
+            //do nothing
         })
         
         task.resume()
     }
     
-    // Mark - Retrieve queue information from the server
-    
+    // Mark - Retrieve the next rider's information from the server
     func getNextRide() {
-        print("RETRIEVE Queue DATA")
-        
-        
         let url = NSURL(string: "http://\(self.appDelegate.baseURL)/Ryde/api/ride/startNextRideForTimeslot/\(self.timeSlotID)/\(self.appDelegate.FBid)")!
-        
-        print(url)
         
         // Creaste URL Request
         let request = NSMutableURLRequest(URL:url);
@@ -277,13 +249,10 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
         
     }
     
+    
+    // Get the list of rides that have not been assigned a driver yet
     func getNonActiveRides() {
-        print("RETRIEVE Queue DATA")
-        
         let url = NSURL(string: "http://\(self.appDelegate.baseURL)/Ryde/api/ride/getNonActiveQueue/\(self.timeSlotID)")!
-        
-        
-        print(url)
         
         // Creaste URL Request
         let request = NSMutableURLRequest(URL:url);
@@ -338,8 +307,8 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
         
     }
     
+    //Get the list of rides that have not been assigned a driver without using a semaphore
     func updateNonActiveRides() {
-        print("RETRIEVE Queue DATA --")
         
         let url = NSURL(string: "http://\(self.appDelegate.baseURL)/Ryde/api/ride/getNonActiveQueue/\(self.timeSlotID)")!
         
@@ -409,14 +378,13 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
             getNextRide()
             dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
             
-            print(nextRideDictionary)
             let userInfo = nextRideDictionary["riderUserId"] as! NSDictionary
             print(userInfo)
             
             // Obtain the object reference of the destination view controller
             let driverMapViewController: DriverMapViewController = segue.destinationViewController as! DriverMapViewController
             
-            //TODO: fields to be passed
+            //Fields to be passed down stream
             driverMapViewController.riderName = userInfo["firstName"] as! String
             driverMapViewController.riderPhone = userInfo["phoneNumber"] as! String
             driverMapViewController.rideID = nextRideDictionary["id"] as! Int
@@ -428,10 +396,7 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
             driverMapViewController.destLng = nextRideDictionary["endLon"] as! Double
         }
         else if segue.identifier == "EditProfileFromDriver" {
-            
-            // Obtain the object reference of the destination (downstream) view controller
-            //let driverMapViewController: DriverMapViewController = segue.destinationViewController as! DriverMapViewController
-            
+            // Do nothing
         }
     }
     
@@ -441,6 +406,7 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
      --------------------------------
      */
     
+    // Function called when a slide menu option is pressed
     func slideMenuItemSelectedAtIndex(index: Int32) {
         let topViewController : UIViewController = self.navigationController!.topViewController!
         print("View Controller is : \(topViewController) \n", terminator: "")
@@ -476,6 +442,7 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
         }
     }
     
+    //Function called when the slide menu button is pressed to bring out slide menu
     @IBAction func onSlideMenuButtonPressed(sender: UIBarButtonItem) {
         if (sender.tag == 10)
         {
@@ -518,9 +485,4 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
             }, completion:nil)
     }
     
-    //Update the userdata with the newly entered data
-    @IBAction func unwindToMenu(segue: UIStoryboardSegue)
-    {
-    
-    }
 }
