@@ -65,7 +65,10 @@ class EditProfileViewController: UIViewController {
 
     }
     
-    
+    /*
+    * Action for when the user taps the delete button. It should ask the user for confirmation. If yes, it should
+    * delete the user from the DB and take the user back to the splash page.
+    */
     @IBAction func deleteButtonTapped(sender: UIButton) {
         // Sends a POST to the specified URL with the JSON conent
         
@@ -202,6 +205,9 @@ class EditProfileViewController: UIViewController {
         self.view.endEditing(true)
     }
     
+    /**
+    * Ensures that the inputted phone number is formatted correctly
+    */
     func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool
     {
         

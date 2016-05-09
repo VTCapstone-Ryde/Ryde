@@ -49,8 +49,6 @@ class ProfileViewController: UIViewController, FBSDKLoginButtonDelegate  {
         let screenSize: CGRect = UIScreen.mainScreen().bounds
         let screenWidth = screenSize.width * 0.5
         let labelAbove = carInfoTextField.frame.origin.y + 350
-//        print("Label above")
-//        print(labelAbove)
         let a = CGPointMake(screenWidth, labelAbove)
         let fbButton = FBSDKLoginButton()
         fbButton.center = self.view.convertPoint(a, fromCoordinateSpace: self.view)
@@ -163,12 +161,15 @@ class ProfileViewController: UIViewController, FBSDKLoginButtonDelegate  {
         
     }
     
+    /*
+    * Segue to edit the profile
+    */
     @IBAction func editProfileButtonTapped(sender: UIButton) {
         performSegueWithIdentifier("editProfile", sender: self)
     }
     
     
-    //Update the userdata with the newly entered data
+    //Update the userdata with the newly entered data from the Edit Profile
     @IBAction func unwindToProfile(segue: UIStoryboardSegue)
     {
         if segue.identifier == "unwindToProfile" {
