@@ -80,7 +80,7 @@ class GroupTableViewController: UITableViewController {
             }
             
             // Print out response string
-            let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
+            //let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
             //print("responseString = \(responseString!)")
             
             
@@ -153,7 +153,7 @@ class GroupTableViewController: UITableViewController {
                 }
                 
                 // Print out response string
-                let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
+                //let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
                 //print("responseString = \(responseString!)")
                 
                 

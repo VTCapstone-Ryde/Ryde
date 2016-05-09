@@ -15,19 +15,28 @@ import FBSDKCoreKit
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
+    // Global Variables So they can be access throughout the entire application//
+    
+    // From FB, used for authentication
     var FBid = ""
     
+    // Probile counters
     var rydesTakenCount = 0
     var rydesGivenCount = 0
     
+    // Dictionary containing information about the current logged in suer
     var currentUser: NSDictionary?
-        
-    var window: UIWindow?
     
+    // Used for API calls.
+    var baseURL = "jupiter.cs.vt.edu"
+    
+    var window: UIWindow?
     var locationManager: CLLocationManager?
 
-    var baseURL = "jupiter.cs.vt.edu"
 
+    /**
+     CoreLocation authentization of usage as well as Facebook SDK implementation
+    **/
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
         

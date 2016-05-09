@@ -490,12 +490,12 @@ class DriverMapViewController: DriverBaseViewController, UIWebViewDelegate,  MKM
          one if we are getting location updates */
         geoCoder.cancelGeocode()
         geoCoder.reverseGeocodeLocation(location, completionHandler: { (data, error) -> Void in
-            guard let placeMarks = data as [CLPlacemark]! else {
-                return
-            }
-            let loc: CLPlacemark = placeMarks[0]
-            let addressDict : [NSString:NSObject] = loc.addressDictionary as! [NSString: NSObject]
-            let addrList = addressDict["FormattedAddressLines"] as! [String]
+//            guard let placeMarks = data as [CLPlacemark]! else {
+//                return
+//            }
+            //let loc: CLPlacemark = placeMarks[0]
+            //let addressDict : [NSString:NSObject] = loc.addressDictionary as! [NSString: NSObject]
+            //let addrList = addressDict["FormattedAddressLines"] as! [String]
             
             //let address = addrList[0]
         })

@@ -36,6 +36,8 @@ class TimeslotsTableViewController: UITableViewController {
         refreshControl.addTarget(self, action: #selector(TimeslotsTableViewController.handleRefresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         self.refreshControl = refreshControl
         
+        self.view.backgroundColor = UIColor.init(patternImage: UIImage(named: "BackgroundMain")!)
+        
         self.title = "\(groupInfo!["title"] as! String): Timeslot"
         
         getData()

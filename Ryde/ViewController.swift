@@ -12,15 +12,23 @@ import FBSDKLoginKit
 
 class ViewController: UIViewController, FBSDKLoginButtonDelegate {
     
-    @IBOutlet var label: UILabel!
+    // IBOUtlet references
     
+    @IBOutlet var label: UILabel!
     @IBOutlet var loginButton: FBSDKLoginButton!
 
+    // Global Variables 
+    
+    // the data received from API call
     var responseString = ""
     
+    // Used to wait for the API call to be done before moving on
     let semaphore = dispatch_semaphore_create(0);
     
+    // Used to access the FB Token
     let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+    
+    // MARK: - View Did Load
     
     override func viewDidLoad() {
         
@@ -32,6 +40,7 @@ class ViewController: UIViewController, FBSDKLoginButtonDelegate {
  
     }
     
+    // MARK: - View Did Appear
     override func viewDidAppear(animated: Bool) {
         
         print("Check if logged in")
@@ -39,6 +48,7 @@ class ViewController: UIViewController, FBSDKLoginButtonDelegate {
         checkIfLoggedIn()
     }
     
+    // MARK: -  Determins if User is logged in
     func checkIfLoggedIn() {
         
         
@@ -50,10 +60,12 @@ class ViewController: UIViewController, FBSDKLoginButtonDelegate {
             
             checkIfAccountCreated()
             
+            // Make sure to wait for api call to come back before proceeding
             dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
             
             print(self.responseString)
             
+            // User already exists so redirect them to the app
             if (self.responseString == "true") {
                 
                 appDelegate.FBid = FBSDKAccessToken.currentAccessToken().userID
@@ -61,6 +73,7 @@ class ViewController: UIViewController, FBSDKLoginButtonDelegate {
                 performSegueWithIdentifier("Home", sender: self)
                 
             }
+            // User is logged in via FB but does not have an account with us so take user to create account view
             else {
                 
                 performSegueWithIdentifier("createAccount", sender: self)
@@ -69,7 +82,7 @@ class ViewController: UIViewController, FBSDKLoginButtonDelegate {
         }
     }
     
-    // Mark - Check if this user already has an account. If so, bypass this create account page.
+    // MARK: - Check if this user already has an account. If so, bypass this create account page.
     
     func checkIfAccountCreated() {
         

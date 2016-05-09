@@ -12,18 +12,17 @@ import FBSDKLoginKit
 
 class CreateAccountViewController: UIViewController, UITextFieldDelegate  {
 
-    // Mark - Outlets
+    // MARK: - Outlets
     
     @IBOutlet var profileImage: UIImageView!
-    
     @IBOutlet var profileName: UILabel!
-
     @IBOutlet var phoneNumber: UITextField!
     
-    // Mark - Fields
+    // MARK: - Fields
     
     let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
     
+    // MARK: - View Did Load
     override func viewDidLoad() {
         super.viewDidLoad()
     
@@ -55,9 +54,7 @@ class CreateAccountViewController: UIViewController, UITextFieldDelegate  {
       
     }
     
-    // Mark - Package data to JSON and Submit to backend
-
-    
+    // MARK: - Package data to JSON and Submit to backend
     @IBAction func submitCreateAccount(sender: UIButton) {
         
         
@@ -74,10 +71,10 @@ class CreateAccountViewController: UIViewController, UITextFieldDelegate  {
             return
         }
         
+        // Create JSON represnting account info to be sent to server for account creation
+        
         let name = profileName.text
-        
         let fullNameArr = name?.componentsSeparatedByString(" ")
-        
         let JSONObject: [String : String] = [
             
             "lastName"  : fullNameArr![(fullNameArr?.count)!-1],
@@ -96,8 +93,6 @@ class CreateAccountViewController: UIViewController, UITextFieldDelegate  {
 
     
     // Mark - Generic POST function that takes in a JSON dictinoary and the URL to be POSTed to
-    
-    
     // SOURCE: http://jamesonquave.com/blog/making-a-post-request-in-swift/
     func post(params : Dictionary<String, String>, url : String) {
 
@@ -112,7 +107,7 @@ class CreateAccountViewController: UIViewController, UITextFieldDelegate  {
             print(error)
             request.HTTPBody = nil
         }
-    
+        // HTTP Request Headers
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         
@@ -153,7 +148,7 @@ class CreateAccountViewController: UIViewController, UITextFieldDelegate  {
     }
     
     
-    // Mark - Get Rid of Keyboard when Done Editing
+    // MARK: - Get Rid of Keyboard when Done Editing
     
     /**
      * Called when 'return' key pressed. return NO to ignore.
@@ -171,6 +166,9 @@ class CreateAccountViewController: UIViewController, UITextFieldDelegate  {
         self.view.endEditing(true)
     }
     
+    /**
+     * Formats phone number text field to be in the format (xxx) xxx-xxxx
+     */
     func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool
     {
         

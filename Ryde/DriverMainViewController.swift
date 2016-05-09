@@ -61,7 +61,7 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         
         // schedules task for every n second
-        updateTimer = NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector:  "updateQueueLabel", userInfo: nil, repeats: true)
+        updateTimer = NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector:  #selector(DriverMainViewController.updateQueueLabel), userInfo: nil, repeats: true)
         
         headerLabel.text = "Welcome!"
         
@@ -107,7 +107,7 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
         
         // schedules task for every n second
         if (updateTimer!.valid == false){
-            updateTimer = NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector:  "updateQueueLabel", userInfo: nil, repeats: true)
+            updateTimer = NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector:  #selector(DriverMainViewController.updateQueueLabel), userInfo: nil, repeats: true)
         }
     }
     
@@ -356,7 +356,7 @@ class DriverMainViewController: UIViewController, SlideMenuDelegate, CLLocationM
         let task = NSURLSession.sharedSession().dataTaskWithRequest(request, completionHandler: {data, response, error -> Void in
             
             //print("Response: \(response)")
-            let strData = NSString(data: data!, encoding: NSUTF8StringEncoding)
+            //let strData = NSString(data: data!, encoding: NSUTF8StringEncoding)
             
             let json: [NSDictionary]?
             
