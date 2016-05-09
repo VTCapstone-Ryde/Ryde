@@ -308,7 +308,7 @@ class RiderViewController: UIViewController, MKMapViewDelegate, CLLocationManage
             }
             
             // Print out response string
-            let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
+            //let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
             //print("responseString = \(responseString!)")
             
             

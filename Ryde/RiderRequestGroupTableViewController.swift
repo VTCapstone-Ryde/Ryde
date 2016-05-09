@@ -71,7 +71,7 @@ class RiderRequestGroupTableViewController: UITableViewController {
         
         //Create a new navigation button that handings popping the current view controller
         self.navigationItem.hidesBackButton = true
-        let newBackButton = UIBarButtonItem(title: "Cancel", style: UIBarButtonItemStyle.Bordered, target: self, action: "back:")
+        let newBackButton = UIBarButtonItem(title: "Cancel", style: UIBarButtonItemStyle.Bordered, target: self, action: #selector(RiderRequestGroupTableViewController.back(_:)))
         self.navigationItem.leftBarButtonItem = newBackButton;
         
         //Adds a navigation button to bring up alert to add TAD

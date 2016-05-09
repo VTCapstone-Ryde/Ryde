@@ -73,7 +73,7 @@ class RequestRideViewController: UIViewController {
         let postUrl = ("http://\(self.appDelegate.baseURL)/Ryde/api/ride/getposition/" + self.FBid + "/" + (String)(self.selectedTID))
         self.getQueuePos(postUrl)
         // Scheduler that calls updateQueue every 3 seconds
-        updateTimer = NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector: "updateQueue", userInfo: nil, repeats: true)
+        updateTimer = NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector: #selector(RequestRideViewController.updateQueue), userInfo: nil, repeats: true)
     }
     
     /**

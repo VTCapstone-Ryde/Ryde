@@ -114,32 +114,33 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
                             return
                         }
                         
-                        let json: [NSDictionary]?
-                        
-                        do {
-                            
-                            json = try NSJSONSerialization.JSONObjectWithData(data!, options: .MutableLeaves) as? [NSDictionary]
-                            
-                        } catch let dataError{
-                            
-                            // Did the JSONObjectWithData constructor return an error? If so, log the error to the console
-                            print(dataError)
-                            let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
-                            print("Error could not parse JSON: '\(jsonStr!)'")
-                            // return or throw?
-                            return
-                        }
-                        
-                        // The JSONObjectWithData constructor didn't return an error. But, we should still
-                        // check and make sure that json has a value using optional binding.
-                        if let parseJSON = json {
-                            // Okay, the parsedJSON is here, lets store its values into an array
-                        }
-                        else {
-                            // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
-                            let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
-                            print("Error could not parse JSON: \(jsonStr!)")
-                        }
+//                        let json: [NSDictionary]?
+//                        
+//                        do {
+//                            
+//                            json = try NSJSONSerialization.JSONObjectWithData(data!, options: .MutableLeaves) as? [NSDictionary]
+//                            
+//                        } catch let dataError{
+//                            
+//                            // Did the JSONObjectWithData constructor return an error? If so, log the error to the console
+//                            print(dataError)
+//                            let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
+//                            print("Error could not parse JSON: '\(jsonStr!)'")
+//                            // return or throw?
+//                            return
+//                        }
+//                        
+//                        // The JSONObjectWithData constructor didn't return an error. But, we should still
+//                        // check and make sure that json has a value using optional binding.
+//                        if let parseJSON = json {
+//                            // Okay, the parsedJSON is here, lets store its values into an array
+//                            return
+//                        }
+//                        else {
+//                            // Woa, okay the json object was nil, something went worng. Maybe the server isn't running?
+//                            let jsonStr = NSString(data: data!, encoding: NSUTF8StringEncoding)
+//                            print("Error could not parse JSON: \(jsonStr!)")
+//                        }
                         
                         
                     })
@@ -205,7 +206,7 @@ class SearchGroupsTableViewController: UITableViewController, UISearchBarDelegat
                 }
                 
                 // Print out response string
-                let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
+                //let responseString = NSString(data: data!, encoding: NSUTF8StringEncoding)
                 //print("responseString = \(responseString!)")
                 
                 

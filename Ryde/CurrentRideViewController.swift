@@ -142,7 +142,7 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
                         print(route.expectedTravelTime)
                         self.mapView.addOverlay((route.polyline), level: MKOverlayLevel.AboveRoads)
                         
-                        var rect = route.polyline.boundingMapRect
+                        let rect = route.polyline.boundingMapRect
                         // reset the mapview to show the route
                         self.mapView.setRegion(MKCoordinateRegionForMapRect(rect), animated: true)
                     }
@@ -150,7 +150,7 @@ class CurrentRideViewController: UIViewController, RiderSlideMenuDelegate, MKMap
         }
         
         // schedules task for every 3 second to updateRide
-        updateTask = NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector: "updateRide", userInfo: nil, repeats: true)
+        updateTask = NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector: #selector(CurrentRideViewController.updateRide), userInfo: nil, repeats: true)
     }
     
     override func didReceiveMemoryWarning() {
